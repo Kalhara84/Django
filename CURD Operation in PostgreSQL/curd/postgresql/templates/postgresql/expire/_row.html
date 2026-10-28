@@ -1,10 +1,49 @@
+﻿<!-- EXPIRE/_ROW.HTML — Reusable partial template for a single detail line row
+     in the expire entry formset table.
+     Included by expire/form.html in two different contexts:
+
+     1. EXISTING / NEW ROWS (inside {% for form in formset %} loop):
+          {% include "postgresql/expire/_row.html" with n=forloop.counter %}
+        Here `form` is the current iteration's bound form and `n` is the
+        1-based row number displayed in the # column.
+
+     2. BLANK TEMPLATE ROW (inside <template id="lineTemplate">):
+          {% include "postgresql/expire/_row.html" with form=formset.empty_form n="" %}
+        Here `form` is the formset's empty_form (all field names contain
+        `__prefix__` instead of a digit index, e.g. "lines-__prefix__-exlexssno").
+        expire-form.js clones this hidden template row and calls renumber()
+        to replace `__prefix__` with the correct sequential index.
+
+     Field reference for each line form:
+       form.exlexssno   : Service Category select field
+       form.exlexpsno   : Period select / input field
+       form.exlgensno   : Account Code select / input field
+       form.exlcomplddt : Complete Date input field
+       form.exlcutoffddt: Cutoff Date input field
+
+     The class "line-row" on the <tr> is used by expire-form.js to select
+     all data rows (body.querySelectorAll('tr.line-row')) when renumbering.
+     The class "line-no" on the first <td> is updated by renumber() to show
+     the correct sequential row number after rows are added or removed. -->
 <tr class="line-row">
+  <!-- Row number — updated dynamically by expire-form.js renumber() -->
   <td class="line-no">{{ n }}</td>
+  <!-- Service Category dropdown -->
   <td>{{ form.exlexssno }}</td>
+  <!-- Period dropdown / input -->
   <td>{{ form.exlexpsno }}</td>
+  <!-- Account Code dropdown / input -->
   <td>{{ form.exlgensno }}</td>
+  <!-- Complete Date input -->
   <td>{{ form.exlcomplddt }}</td>
+  <!-- Cutoff Date input -->
   <td>{{ form.exlcutoffddt }}</td>
+  <!-- ACTION BUTTONS
+       btn-add-row : clicking this button calls addRowAfter() in expire-form.js,
+                     which clones the lineTemplate and inserts a new blank row
+                     immediately after the row containing this button.
+       btn-del-row : clicking this button removes the row from the DOM (or clears
+                     it if it is the last remaining row) and calls renumber(). -->
   <td class="text-center text-nowrap">
     <button type="button" class="btn btn-outline-primary btn-add-row" title="Add row">+</button>
     <button type="button" class="btn btn-outline-danger btn-del-row" title="Remove row">-</button>
