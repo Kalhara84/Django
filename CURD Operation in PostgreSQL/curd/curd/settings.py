@@ -1,29 +1,17 @@
-"""
-Django settings for curd project.
 
-Role of this file:
-- This is the central configuration file for the entire Django project.
-- It defines installed apps, database connection details, middleware, security keys,
-  template configurations, and custom global variables.
-"""
 
 from pathlib import Path
 
-# BASE_DIR represents the root directory path of this project.
-# This helps construct absolute paths to other files (like sqlite DB, static files, templates).
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# SECURITY WARNING: keep the secret key used in production secret!
-# Django uses this key for cryptographic signing (sessions, CSRF tokens, password reset tokens).
 SECRET_KEY = 'django-insecure-68=x#^w!4nf0@3g-&a@p)6g!p569to@gd+a6382x-an)98pv(s'
 
-# DEBUG mode: Set to True for local development to see detailed error traceback pages.
-# WARNING: Must be set to False in production to avoid exposing sensitive code/server details.
+
 DEBUG = True
 
-# Allowed host/domain names that this Django site can serve.
-# Empty list allows localhost / 127.0.0.1 in DEBUG mode.
+
 ALLOWED_HOSTS = []
 
 

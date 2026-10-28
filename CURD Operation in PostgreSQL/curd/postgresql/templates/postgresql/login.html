@@ -1,6 +1,4 @@
 {% load static %}<!DOCTYPE html>
-{# Login Page Template #}
-{# Rendered by login_view() in views.py when an unauthenticated user visits the site or tries to access protected views #}
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -17,16 +15,12 @@
 <body class="jw-login">
 <div class="jw-login-wrap">
 
-  {# Left Column: Visual Branding and Hero Banner #}
+  <!-- left : brand / artwork -->
   <section class="jw-login-hero">
-    <div class="brand">
-      <img src="{% static 'assesst/img/jw-logo.svg' %}" alt="{{ APP_NAME }}">
-      <span>{{ APP_NAME }}</span>
-    </div>
+    <div class="brand"><img src="{% static 'assesst/img/jw-logo.svg' %}" alt="{{ APP_NAME }}"><span>{{ APP_NAME }}</span></div>
     <div>
       <h1>Crafting trust,<br><em>one gem at a time.</em></h1>
       <p>Stock, customers, suppliers and pricing for your jewellery business &mdash; all in one elegant place.</p>
-      {# Gem vector illustrations #}
       <div class="gems">
         <img src="{% static 'assesst/img/diamond.svg' %}"  alt="diamond">
         <img src="{% static 'assesst/img/ring.svg' %}"     alt="ring">
@@ -38,37 +32,29 @@
     <small>&copy; {% now "Y" %} {{ APP_NAME }} Jewellers</small>
   </section>
 
-  {# Right Column: Login Form Card #}
+  <!-- right : login form -->
   <section class="jw-login-panel">
     <div class="jw-login-card">
       <img class="logo-m" src="{% static 'assesst/img/jw-logo.svg' %}" alt="{{ APP_NAME }}">
       <h2>Welcome back</h2>
       <p class="sub">Sign in to continue to your dashboard.</p>
 
-      {# Login POST form: submits to same URL (login_view) #}
       <form method="post" action="" id="login" autocomplete="off">
-        {# CSRF Security token required for all Django POST forms #}
         {% csrf_token %}
-        
-        {# Authentication error message (e.g. Invalid User Code or Password) #}
         {% if error %}
         <div class="alert alert-danger py-2 mb-3"><i class="bi bi-x-circle"></i> <b>{{ error }}</b></div>
         {% endif %}
 
-        {# User Code / Username input field #}
         <div class="jw-input">
           <i class="bi bi-person lead-ico"></i>
           <input type="text" name="usdusd" id="usdusd" value="{{ usdusd }}" class="form-control" placeholder="User Name" autocomplete="off" required autofocus>
         </div>
-
-        {# Password input field with toggle visibility button #}
         <div class="jw-input">
           <i class="bi bi-lock lead-ico"></i>
           <input type="password" name="usdpwd" id="usdpwd" class="form-control" placeholder="Password" autocomplete="off" required>
           <button type="button" class="toggle-pwd" id="togglePwd" tabindex="-1" aria-label="Show password"><i class="bi bi-eye"></i></button>
         </div>
 
-        {# Remember Me Checkbox #}
         <div class="links">
           <div class="form-check m-0">
             <input class="form-check-input" type="checkbox" name="remember" id="remember" value="1">
@@ -84,7 +70,6 @@
   </section>
 </div>
 
-{# Client-side JavaScript to toggle password visibility (Eye Icon) #}
 <script>
 document.getElementById('togglePwd').addEventListener('click', function () {
   var f = document.getElementById('usdpwd'), show = f.type === 'password';
@@ -94,4 +79,3 @@ document.getElementById('togglePwd').addEventListener('click', function () {
 </script>
 </body>
 </html>
-

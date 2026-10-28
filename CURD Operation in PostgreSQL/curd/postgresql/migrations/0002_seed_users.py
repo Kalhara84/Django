@@ -1,3 +1,4 @@
+
 import datetime
 
 from django.contrib.auth.hashers import make_password
@@ -35,6 +36,7 @@ def seed(apps, schema_editor):
     for r in rows:
         if not Usdmast.objects.filter(usdusd=r["usdusd"], usdcomsno=r["usdcomsno"]).exists():
             Usdmast.objects.create(**r)
+
 
     if schema_editor.connection.vendor == "postgresql":
         with schema_editor.connection.cursor() as cur:

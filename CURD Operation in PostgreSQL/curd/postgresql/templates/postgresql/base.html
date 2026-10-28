@@ -1,14 +1,9 @@
 {% load static %}<!DOCTYPE html>
-{# Base Template: Inherited by all internal application pages (Dashboard, User List, Form) #}
-{# Provides uniform layout: HTML head links, left sidebar, top header bar, message alerts, and footer #}
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-{# Dynamic page title block with fallback to Dashboard | APP_NAME #}
 <title>{% block title %}Dashboard{% endblock %} | {{ APP_NAME }}</title>
-
-{# Favicon & CSS Stylesheets (Bootstrap, Icons, Custom Brand Theme) #}
 <link rel="icon" type="image/svg+xml" href="{% static 'assesst/img/jw-logo.svg' %}">
 <link rel="stylesheet" href="{% static 'assesst/bootstrap/bootstrap-5.3.3.min.css' %}">
 <link rel="stylesheet" href="{% static 'assesst/icons/bootstrap-icons/bootstrap-icons.min.css' %}">
@@ -17,75 +12,52 @@
 {% block head %}{% endblock %}
 </head>
 <body class="jw-body">
-{# Get current route name to highlight active sidebar menu items #}
 {% with page=request.resolver_match.url_name %}
-
-{# Mobile sidebar overlay backdrop #}
 <div class="jw-backdrop" id="jwBackdrop"></div>
 
-{# ---------------- LEFT SIDEBAR NAVIGATION ---------------- #}
 <aside class="jw-sidebar" id="jwSidebar">
-  {# Brand Logo & Name #}
   <a class="jw-brand" href="{% url 'dashboard' %}">
     <img src="{% static 'assesst/img/jw-logo.svg' %}" alt="">
     <div><div class="t1">{{ APP_NAME }}</div><div class="t2">Jewellers</div></div>
   </a>
-
-  {# Navigation Menu #}
   <nav>
     <div class="jw-nav-title">Main</div>
-    <a class="jw-link {% if page == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}">
-      <i class="bi bi-speedometer2"></i> Dashboard
-    </a>
+    <a class="jw-link {% if page == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a>
 
-    {# Administration Section: Only rendered if logged-in user is an admin (usd.is_admin == True) #}
+    <a class="jw-link {% if page == 'expire_list' or page == 'expire_add' or page == 'expire_edit' %}active{% endif %}" href="{% url 'expire_list' %}"><i class="bi bi-hourglass-split"></i> Expire Module</a>
+
     {% if usd.is_admin %}
     <div class="jw-nav-title">Administration</div>
-    <a class="jw-link {% if page == 'user_list' or page == 'user_add' or page == 'user_edit' %}active{% endif %}" href="{% url 'user_list' %}">
-      <i class="bi bi-people"></i> Users
-    </a>
+    <a class="jw-link {% if page == 'user_list' or page == 'user_add' or page == 'user_edit' %}active{% endif %}" href="{% url 'user_list' %}"><i class="bi bi-people"></i> Users</a>
     {% endif %}
   </nav>
-
-  {# Sidebar Footer: Logout button (POST request with CSRF token for security) #}
   <div class="jw-side-foot">
     <form method="post" action="{% url 'logout' %}">
       {% csrf_token %}
-      <button type="submit" class="btn btn-dark-gold btn-sm w-100">
-        <i class="bi bi-box-arrow-right"></i> Logout
-      </button>
+      <button type="submit" class="btn btn-dark-gold btn-sm w-100"><i class="bi bi-box-arrow-right"></i> Logout</button>
     </form>
   </div>
 </aside>
 
-{# ---------------- MAIN CONTENT WRAPPER ---------------- #}
 <div class="jw-main">
-  {# Top Navigation Bar: Mobile toggle, Page Title, User Profile Pill #}
   <header class="jw-topbar">
-    <button class="btn btn-outline-gold btn-sm d-lg-none" id="jwToggle" type="button" aria-label="Toggle Navigation">
-      <i class="bi bi-list"></i>
-    </button>
+    <button class="btn btn-outline-gold btn-sm d-lg-none" id="jwToggle" type="button"><i class="bi bi-list"></i></button>
     <h1 class="jw-page-title">{% block page_title %}Dashboard{% endblock %}</h1>
     <div class="jw-user ms-auto">
       <div class="text-end d-none d-sm-block lh-sm">
         <div class="fw-semibold">{{ usd.usdnam|default:usd.usdusd }}</div>
         <small class="text-muted">{{ usd.usdusd }}{% if usd.is_admin %} &middot; Admin{% endif %}</small>
       </div>
-      {# User initial avatar circle #}
       <div class="jw-avatar">{{ usd.usdusd|slice:":1"|upper }}</div>
     </div>
   </header>
 
-  {# Central Page Content #}
   <main class="jw-content">
-    {# Django Flash Messages (Success / Warning / Danger alerts) #}
     {% for m in messages %}
     <div class="alert alert-{% if m.tags == 'error' %}danger{% elif m.tags == 'success' %}success{% else %}warning{% endif %} alert-dismissible fade show" role="alert">
       {{ m }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
     {% endfor %}
-
-    {# Child templates insert their unique page content here #}
     {% block content %}{% endblock %}
   </main>
 
@@ -93,7 +65,6 @@
 </div>
 {% endwith %}
 
-{# Bootstrap JS & Mobile Menu Drawer Toggle Script #}
 <script src="{% static 'assesst/bootstrap/bootstrap.bundle.min.js' %}"></script>
 <script>
 (function () {
@@ -107,4 +78,3 @@
 {% block scripts %}{% endblock %}
 </body>
 </html>
-

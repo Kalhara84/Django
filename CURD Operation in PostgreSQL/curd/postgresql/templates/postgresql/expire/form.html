@@ -1,0 +1,67 @@
+{% extends "postgresql/base.html" %}
+{% load static %}
+{% block title %}Expire Module{% endblock %}
+{% block page_title %}Expire Module{% endblock %}
+{% block head %}<link rel="stylesheet" href="{% static 'assesst/css/expire.css' %}">{% endblock %}
+
+{% block content %}
+<div class="exp-page">
+  <h3 class="exp-title">{% if obj %}Edit Expire Entry{% else %}Add Expire Entry{% endif %}</h3>
+  <hr>
+
+  <form method="post" id="expForm" novalidate>
+    {% csrf_token %}
+
+    <div class="row g-4 mb-3">
+      <div class="col-md-4">{% include "postgresql/expire/_field.html" with f=hform.exhdno %}</div>
+      <div class="col-md-4">{% include "postgresql/expire/_field.html" with f=hform.exhddt %}</div>
+      <div class="col-md-4">{% include "postgresql/expire/_field.html" with f=hform.exhdes %}</div>
+    </div>
+    <div class="row g-4 mb-4">
+      <div class="col-md-4">{% include "postgresql/expire/_field.html" with f=hform.exhexcsno %}</div>
+      <div class="col-md-4">{% include "postgresql/expire/_field.html" with f=hform.exhexlocsno %}</div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table exp-table align-middle">
+        <thead>
+          <tr>
+            <th>#</th><th>Service Cat</th><th>Period</th><th>Acc Code</th>
+            <th>Complete Date</th><th>Cutoff Date</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="lineBody">
+          {% for form in formset %}{% include "postgresql/expire/_row.html" with n=forloop.counter %}{% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {{ formset.management_form }}
+    <template id="lineTemplate">{% include "postgresql/expire/_row.html" with form=formset.empty_form n="" %}</template>
+
+    {% if formset.non_form_errors %}
+      <div class="text-danger exp-lines-error mt-2">{{ formset.non_form_errors.0 }}</div>
+    {% endif %}
+    {% for form in formset %}{% if form.errors %}
+      <div class="text-danger exp-lines-error">Line {{ forloop.counter }}:
+        {% for name, errs in form.errors.items %}{{ errs.0 }}{% if not forloop.last %}, {% endif %}{% endfor %}</div>
+    {% endif %}{% endfor %}
+
+    <div class="row exp-totals">
+      <div class="col-md-3">
+        <label class="form-label" for="totalLines">Total Lines</label>
+        <input type="text" id="totalLines" class="form-control" value="{{ formset.forms|length }}" readonly>
+      </div>
+      <div class="col text-end align-self-end">
+        <a href="{% url 'expire_list' %}" class="btn btn-secondary me-1">Cancel</a>
+        <button type="submit" class="btn btn-primary px-4">Save</button>
+      </div>
+    </div>
+
+    {% if obj and obj.exhucdame %}
+    <p class="text-muted small mt-3 mb-0">Last updated by <b>{{ obj.exhucdame }}</b> on {{ obj.exhameddt|date:"Y-m-d" }} {{ obj.exhametime|time:"H:i:s" }}</p>
+    {% endif %}
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}<script src="{% static 'assesst/js/expire-form.js' %}"></script>{% endblock %}
