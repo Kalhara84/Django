@@ -1,4 +1,4 @@
-﻿{% load static %}<!-- Load Django's static file tag library for {% static '...' %} URL resolution -->
+{% load static %}<!-- Load Django's static file tag library for static asset URL resolution -->
 <!DOCTYPE html>
 <!-- LOGIN.HTML — Standalone login page.
      This template does NOT extend base.html because the login screen
@@ -54,7 +54,7 @@
         <img src="{% static 'assesst/img/bangle.svg' %}"   alt="bangle">
       </div>
     </div>
-    <!-- Dynamic year via Django's {% now %} template tag -->
+    <!-- Dynamic year via Django's now template tag: now "Y" -->
     <small>&copy; {% now "Y" %} {{ APP_NAME }} Jewellers</small>
   </section>
 
@@ -85,7 +85,7 @@
 
         <!-- Username field — wrapped in jw-input for icon + input styling.
              name="usdusd" matches the POST key the view reads with request.POST.get('usdusd').
-             value="{{ usdusd }}" re-populates the field after a failed login attempt. -->
+             value="[var: usdusd]" re-populates the field after a failed login attempt. -->
         <div class="jw-input">
           <i class="bi bi-person lead-ico"></i>
           <input type="text" name="usdusd" id="usdusd" value="{{ usdusd }}" class="form-control" placeholder="User Name" autocomplete="off" required autofocus>

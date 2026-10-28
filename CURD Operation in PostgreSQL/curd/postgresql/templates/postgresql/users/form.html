@@ -40,7 +40,7 @@
         {% for f in fields %}
           <!-- CHECKBOX / TOGGLE RENDERING (is_check == True)
                Checkbox fields use Bootstrap's form-check / form-switch layout:
-               the widget renders first ({{ f }}), then its <label> follows.
+               the widget renders first ([var: f]), then its <label> follows.
                A smaller column width is used because toggles are compact. -->
           {% if is_check %}
           <div class="col-6 col-md-4 col-xl-3">

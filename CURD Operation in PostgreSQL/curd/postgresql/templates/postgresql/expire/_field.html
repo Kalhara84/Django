@@ -1,13 +1,13 @@
 ﻿<!-- EXPIRE/_FIELD.HTML — Reusable partial template for a single form field.
      Included by expire/form.html using:
-       {% include "postgresql/expire/_field.html" with f=hform.<fieldname> %}
+       [tag: include "postgresql/expire/_field.html" with f=hform.<fieldname>]
      The `f` variable is a Django BoundField object that provides:
        f.id_for_label : the HTML id attribute of the rendered widget,
                         used to associate the <label> with the <input>.
        f.label        : the human-readable field label string.
        f.field.required : True if the field is marked required in the form class,
                           used to append a red asterisk (*) to the label.
-       {{ f }}        : renders the widget HTML (<input>, <select>, etc.)
+       [var: f]        : renders the widget HTML (<input>, <select>, etc.)
                         with the current value and any CSS classes set by the form.
        f.errors.0     : the first validation error message for this field
                         (shown inside the Bootstrap invalid-feedback div).

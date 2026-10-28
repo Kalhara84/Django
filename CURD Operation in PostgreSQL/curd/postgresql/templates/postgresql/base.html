@@ -1,12 +1,12 @@
-﻿{% load static %}<!-- Load Django's static file tag library so {% static '...' %} resolves asset URLs -->
+﻿{% load static %}<!-- Load Django's static file tag library so [tag: static '...'] resolves asset URLs -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <!-- ============================================================
      BASE.HTML — Master layout template for the entire application.
      All page templates (dashboard, users, expire, etc.) extend this
-     file using {% extends "postgresql/base.html" %} and fill in the
-     named {% block %} slots defined here.
+     file using [tag: extends "postgresql/base.html"] and fill in the
+     named [tag: block] slots defined here.
 
      Context variables available on every page (injected by middleware
      or views):
@@ -16,7 +16,7 @@
      ============================================================ -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<!-- {% block title %} lets child templates override the browser tab title.
+<!-- [tag: block title] lets child templates override the browser tab title.
      Falls back to "Dashboard" if no child block is defined. -->
 <title>{% block title %}Dashboard{% endblock %} | {{ APP_NAME }}</title>
 <!-- Favicon — resolved via Django's static-file system -->
@@ -29,12 +29,12 @@
 <link rel="stylesheet" href="{% static 'assesst/css/jw-fonts.css' %}">
 <!-- JW application theme — colours, sidebar, topbar, card styles, etc. -->
 <link rel="stylesheet" href="{% static 'assesst/css/jw-theme.css' %}">
-<!-- {% block head %} lets child templates inject extra <link> or <style> tags
+<!-- [tag: block head] lets child templates inject extra <link> or <style> tags
      into the <head> without touching this file (e.g. expire.css). -->
 {% block head %}{% endblock %}
 </head>
 <body class="jw-body">
-<!-- {% with %} creates a scoped variable `page` holding the URL name of the
+<!-- [tag: with] creates a scoped variable `page` holding the URL name of the
      current request (e.g. 'dashboard', 'user_list', 'expire_add').
      This is used below to apply the "active" CSS class to the correct
      sidebar navigation link. -->
@@ -47,9 +47,9 @@
      SIDEBAR — Left navigation panel.
      On large screens it is always visible; on small screens it slides
      in/out via the toggle button in the topbar.
-     {% url 'dashboard' %} generates the URL for the named URL pattern.
-     {% if page == '...' %} adds the "active" class to the current page link.
-     {% if usd.is_admin %} hides the Administration section from non-admins.
+     [tag: url 'dashboard'] generates the URL for the named URL pattern.
+     [tag: if page == '...'] adds the "active" class to the current page link.
+     [tag: if usd.is_admin] hides the Administration section from non-admins.
      ============================================================ -->
 <aside class="jw-sidebar" id="jwSidebar">
   <!-- Brand / logo area — clicking takes the user to the Dashboard -->
@@ -96,7 +96,7 @@
     <!-- Mobile-only hamburger button — hidden on lg+ screens (d-lg-none).
          Clicking it toggles the sidebar open/closed. -->
     <button class="btn btn-outline-gold btn-sm d-lg-none" id="jwToggle" type="button"><i class="bi bi-list"></i></button>
-    <!-- {% block page_title %} — child templates override this to set the
+    <!-- [tag: block page_title] — child templates override this to set the
          heading text shown in the topbar (e.g. "Users", "Expire Module"). -->
     <h1 class="jw-page-title">{% block page_title %}Dashboard{% endblock %}</h1>
     <!-- Logged-in user info displayed at the right side of the topbar.
@@ -113,7 +113,7 @@
     </div>
   </header>
 
-  <!-- MAIN CONTENT AREA — all page-specific HTML goes inside {% block content %} -->
+  <!-- MAIN CONTENT AREA — all page-specific HTML goes inside [tag: block content] -->
   <main class="jw-content">
     <!-- Flash messages — Django's messaging framework passes one-time
          notifications (success, error, warning) via the `messages`
@@ -125,12 +125,12 @@
       {{ m }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
     {% endfor %}
-    <!-- {% block content %} is the primary slot that every child template fills
+    <!-- [tag: block content] is the primary slot that every child template fills
          with its own page body HTML. -->
     {% block content %}{% endblock %}
   </main>
 
-  <!-- FOOTER — displays the current 4-digit year via {% now "Y" %} and the app name -->
+  <!-- FOOTER — displays the current 4-digit year via [tag: now "Y"] and the app name -->
   <footer class="jw-footer">&copy; {% now "Y" %} {{ APP_NAME }} Jewellers</footer>
 </div>
 {% endwith %}
@@ -148,7 +148,7 @@
   bd.addEventListener('click', function () { toggle(false); });
 })();
 </script>
-<!-- {% block scripts %} lets child templates append page-specific <script> tags
+<!-- [tag: block scripts] lets child templates append page-specific <script> tags
      after Bootstrap JS has loaded (e.g. expire-form.js, inline search JS). -->
 {% block scripts %}{% endblock %}
 </body>

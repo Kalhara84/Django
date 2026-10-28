@@ -1,6 +1,6 @@
 ﻿<!-- DASHBOARD.HTML — Main dashboard page.
-     {% extends %} tells Django to use base.html as the outer shell.
-     This template only defines the {% block %} slots it needs to fill;
+     [tag: extends] tells Django to use base.html as the outer shell.
+     This template only defines the [tag: block] slots it needs to fill;
      everything else (sidebar, topbar, footer, flash messages) is
      inherited from base.html automatically. -->
 {% extends "postgresql/base.html" %}
@@ -17,7 +17,7 @@
      usd.usdnam  : the user's full display name (falls back to login code if blank)
      usd.usdusd  : the user's login code (username)
      APP_NAME    : application name string injected by context processor
-     {% now %}   : Django tag that outputs the current date/time in the given format -->
+     [tag: now]   : Django tag that outputs the current date/time in the given format -->
 <section class="jw-hero mb-4">
   <img class="jw-hero-art d-none d-md-block" src="{% static 'assesst/img/hero-art.svg' %}" alt="">
   <h2>Welcome, {{ usd.usdnam|default:usd.usdusd }}</h2>
@@ -28,7 +28,7 @@
 </section>
 
 <!-- ADMIN-ONLY STATISTICS CARDS SECTION
-     {% if usd.is_admin %} guards this entire block so that only users
+     [tag: if usd.is_admin] guards this entire block so that only users
      whose usdadmin flag is set (is_admin property returns True) can see
      the KPI cards. Regular (non-admin) users see nothing here.
 

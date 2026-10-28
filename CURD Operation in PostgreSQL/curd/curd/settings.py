@@ -12,7 +12,7 @@ SECRET_KEY = 'django-insecure-68=x#^w!4nf0@3g-&a@p)6g!p569to@gd+a6382x-an)98pv(s
 DEBUG = True
 
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition: List of all active Django apps in this project.

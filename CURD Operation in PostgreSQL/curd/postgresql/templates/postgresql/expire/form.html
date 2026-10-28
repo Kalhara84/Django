@@ -61,7 +61,7 @@
         <!-- id="lineBody" — expire-form.js appends/removes <tr> elements here -->
         <tbody id="lineBody">
           <!-- FORMSET ROWS LOOP
-               {% for form in formset %} iterates over each line form in the formset.
+               [tag: for form in formset] iterates over each line form in the formset.
                forloop.counter provides the 1-based row number passed as `n` to _row.html.
                Each row is rendered by including the _row.html partial. -->
           {% for form in formset %}{% include "postgresql/expire/_row.html" with n=forloop.counter %}{% endfor %}
@@ -70,7 +70,7 @@
     </div>
 
     <!-- DJANGO FORMSET MANAGEMENT FORM
-         {{ formset.management_form }} outputs hidden input fields that Django
+         [var: formset.management_form] outputs hidden input fields that Django
          requires to process the formset on the server side:
            lines-TOTAL_FORMS   : total number of forms (rows) submitted
            lines-INITIAL_FORMS : number of forms pre-populated from the database

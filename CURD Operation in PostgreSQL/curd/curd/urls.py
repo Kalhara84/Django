@@ -1,4 +1,4 @@
-﻿# =============================================================================
+# =============================================================================
 # curd/urls.py  -  Root URL configuration (the main "switchboard")
 # =============================================================================
 # Django reads this file to figure out which view function to call for each
@@ -14,8 +14,12 @@
 
 from django.contrib import admin       # Django's built-in admin site
 from django.urls import include, path  # helpers to build URL patterns
+from django.views.generic.base import RedirectView  # helper to redirect URLs
 
 urlpatterns = [
+    # Favicon route to prevent 404 in browser console
+    path('favicon.ico', RedirectView.as_view(url='/static/assesst/img/jw-logo.svg', permanent=True)),
+
     # /admin/  ->  Django's built-in admin interface (login, manage DB records)
     path('admin/', admin.site.urls),
 

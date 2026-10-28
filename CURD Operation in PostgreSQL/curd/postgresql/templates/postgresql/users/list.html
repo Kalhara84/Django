@@ -10,11 +10,11 @@
 {% block content %}
 <div class="jw-card">
   <div class="jw-card-head">
-    <!-- Card heading — {{ users|length }} shows the total count of user records -->
+    <!-- Card heading — [var: users|length] shows the total count of user records -->
     <h5><i class="bi bi-people"></i> User master <span class="text-muted small">({{ users|length }})</span></h5>
     <div class="d-flex gap-2">
       <!-- LIVE SEARCH INPUT
-           The keyup/input event in the {% block scripts %} section below
+           The keyup/input event in the [tag: block scripts] section below
            filters table rows in real time without a server round-trip.
            id="userSearch" is the hook used by that JavaScript. -->
       <input type="search" id="userSearch" class="form-control form-control-sm" placeholder="Search..." style="width:200px">
@@ -34,7 +34,7 @@
         </thead>
         <tbody>
         <!-- USER TABLE LOOP
-             {% for u in users %} iterates over every user record in the queryset.
+             [tag: for u in users] iterates over every user record in the queryset.
              Field reference:
                u.usdsno     : serial / row number
                u.usdusd     : login code (username)
@@ -46,7 +46,7 @@
                u.usducdame  : login code of the user who last modified this record
                u.usdameddt  : date of last modification
                u.usdametime : time of last modification
-             {% empty %} is rendered when the queryset is empty (no users). -->
+             [tag: empty] is rendered when the queryset is empty (no users). -->
         {% for u in users %}
           <tr>
             <td>{{ u.usdsno }}</td>
@@ -84,7 +84,7 @@
 <!-- DELETE CONFIRMATION MODAL
      Bootstrap 5 modal that asks the user to confirm deletion before
      the form is submitted. The modal is triggered by clicking any
-     .js-del button in the table (see the {% block scripts %} JS below).
+     .js-del button in the table (see the [tag: block scripts] JS below).
 
      The form inside the modal is a POST form with a CSRF token.
      The form's action URL and the user name displayed in the body

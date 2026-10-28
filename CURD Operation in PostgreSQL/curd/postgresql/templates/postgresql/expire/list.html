@@ -7,17 +7,17 @@
 {% load static %}
 {% block title %}Expire Module{% endblock %}
 {% block page_title %}Expire Module{% endblock %}
-<!-- {% block head %} injects expire-specific styles into the base.html <head> -->
+<!-- [tag: block head] injects expire-specific styles into the base.html <head> -->
 {% block head %}<link rel="stylesheet" href="{% static 'assesst/css/expire.css' %}">{% endblock %}
 
 {% block content %}
 <div class="jw-card exp-list">
   <div class="jw-card-head">
-    <!-- Card heading — {{ rows|length }} shows total expire entry count -->
+    <!-- Card heading — [var: rows|length] shows total expire entry count -->
     <h5><i class="bi bi-hourglass-split"></i> Expire entries <span class="text-muted small">({{ rows|length }})</span></h5>
     <div class="d-flex gap-2">
       <!-- LIVE SEARCH INPUT
-           Filters table rows client-side via the JavaScript in {% block scripts %}.
+           Filters table rows client-side via the JavaScript in [tag: block scripts].
            id="expSearch" is the hook used by the search listener. -->
       <input type="search" id="expSearch" class="form-control form-control-sm" placeholder="Search..." style="width:200px">
       <!-- Link to the Add Expire Entry form page -->
@@ -34,7 +34,7 @@
         </thead>
         <tbody>
         <!-- EXPIRE ENTRIES LOOP
-             {% for h in rows %} iterates over every expire header record.
+             [tag: for h in rows] iterates over every expire header record.
              Field reference:
                h.exhsno      : serial / row number
                h.exhdno      : document / entry code
@@ -47,7 +47,7 @@
                h.exhucdnew   : login code of the user who created this record
                h.exhameddt / h.exhametime : last amendment date/time
                h.exhentddt / h.exhenttime : entry creation date/time
-             {% empty %} is rendered when the queryset is empty. -->
+             [tag: empty] is rendered when the queryset is empty. -->
         {% for h in rows %}
           <tr>
             <td>{{ h.exhsno }}</td>

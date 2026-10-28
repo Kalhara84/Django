@@ -2,13 +2,13 @@
      in the expire entry formset table.
      Included by expire/form.html in two different contexts:
 
-     1. EXISTING / NEW ROWS (inside {% for form in formset %} loop):
-          {% include "postgresql/expire/_row.html" with n=forloop.counter %}
+     1. EXISTING / NEW ROWS (inside [tag: for form in formset] loop):
+          [tag: include "postgresql/expire/_row.html" with n=forloop.counter]
         Here `form` is the current iteration's bound form and `n` is the
         1-based row number displayed in the # column.
 
      2. BLANK TEMPLATE ROW (inside <template id="lineTemplate">):
-          {% include "postgresql/expire/_row.html" with form=formset.empty_form n="" %}
+          [tag: include "postgresql/expire/_row.html" with form=formset.empty_form n=""]
         Here `form` is the formset's empty_form (all field names contain
         `__prefix__` instead of a digit index, e.g. "lines-__prefix__-exlexssno").
         expire-form.js clones this hidden template row and calls renumber()
