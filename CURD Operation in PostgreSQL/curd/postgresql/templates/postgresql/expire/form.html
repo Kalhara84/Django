@@ -1,27 +1,55 @@
+﻿<!-- EXPIRE/FORM.HTML — Add / Edit expire entry form page.
+     Extends base.html to inherit the full page chrome (sidebar, topbar, etc.).
+     Context variables supplied by the expire_add / expire_edit view:
+       hform   : ExpireHeaderForm instance for the header fields
+       formset : ExpireLineFormSet — a Django inline formset for the detail rows
+       obj     : the existing ExpireHeader model instance (edit) or None (add) -->
 {% extends "postgresql/base.html" %}
 {% load static %}
 {% block title %}Expire Module{% endblock %}
 {% block page_title %}Expire Module{% endblock %}
+<!-- Inject expire-specific CSS into the base.html <head> via the head block -->
 {% block head %}<link rel="stylesheet" href="{% static 'assesst/css/expire.css' %}">{% endblock %}
 
 {% block content %}
 <div class="exp-page">
+  <!-- Dynamic heading — "Edit Expire Entry" when obj exists, "Add Expire Entry" otherwise -->
   <h3 class="exp-title">{% if obj %}Edit Expire Entry{% else %}Add Expire Entry{% endif %}</h3>
   <hr>
 
+  <!-- MAIN FORM
+       id="expForm"  : referenced by expire-form.js for submit validation
+       novalidate    : disables native browser HTML5 validation so that the
+                       custom JS validation in expire-form.js runs instead -->
   <form method="post" id="expForm" novalidate>
+    <!-- CSRF TOKEN — Django requires this on every POST form -->
     {% csrf_token %}
 
+    <!-- HEADER FIELDS — Row 1: Document Code, Date, Description
+         Each field is rendered via the reusable _field.html partial template.
+         The `with f=hform.<fieldname>` syntax passes the bound field to the partial.
+         hform.exhdno       : document/entry code field
+         hform.exhddt       : entry date field
+         hform.exhdes       : description text field -->
     <div class="row g-4 mb-3">
       <div class="col-md-4">{% include "postgresql/expire/_field.html" with f=hform.exhdno %}</div>
       <div class="col-md-4">{% include "postgresql/expire/_field.html" with f=hform.exhddt %}</div>
       <div class="col-md-4">{% include "postgresql/expire/_field.html" with f=hform.exhdes %}</div>
     </div>
+    <!-- HEADER FIELDS — Row 2: Item Category (foreign key dropdown), Location (foreign key dropdown)
+         hform.exhexcsno    : item category select field (maps to ExCategory model)
+         hform.exhexlocsno  : location select field (maps to ExLocation model) -->
     <div class="row g-4 mb-4">
       <div class="col-md-4">{% include "postgresql/expire/_field.html" with f=hform.exhexcsno %}</div>
       <div class="col-md-4">{% include "postgresql/expire/_field.html" with f=hform.exhexlocsno %}</div>
     </div>
 
+    <!-- DETAIL LINE TABLE
+         The formset provides one form per existing detail line (when editing)
+         or a single blank form (when adding).
+         Each row is rendered via the _row.html partial template.
+         id="lineBody" is the hook used by expire-form.js to locate the
+         <tbody> when adding or removing rows dynamically. -->
     <div class="table-responsive">
       <table class="table exp-table align-middle">
         <thead>
@@ -30,14 +58,40 @@
             <th>Complete Date</th><th>Cutoff Date</th><th>Actions</th>
           </tr>
         </thead>
+        <!-- id="lineBody" — expire-form.js appends/removes <tr> elements here -->
         <tbody id="lineBody">
+          <!-- FORMSET ROWS LOOP
+               {% for form in formset %} iterates over each line form in the formset.
+               forloop.counter provides the 1-based row number passed as `n` to _row.html.
+               Each row is rendered by including the _row.html partial. -->
           {% for form in formset %}{% include "postgresql/expire/_row.html" with n=forloop.counter %}{% endfor %}
         </tbody>
       </table>
     </div>
+
+    <!-- DJANGO FORMSET MANAGEMENT FORM
+         {{ formset.management_form }} outputs hidden input fields that Django
+         requires to process the formset on the server side:
+           lines-TOTAL_FORMS   : total number of forms (rows) submitted
+           lines-INITIAL_FORMS : number of forms pre-populated from the database
+           lines-MIN_NUM_FORMS : minimum allowed forms
+           lines-MAX_NUM_FORMS : maximum allowed forms
+         expire-form.js keeps lines-TOTAL_FORMS in sync with the actual number
+         of visible rows whenever rows are added or removed. -->
     {{ formset.management_form }}
+
+    <!-- LINE TEMPLATE — hidden <template> element used by expire-form.js
+         to clone new blank rows.  It contains formset.empty_form, which has
+         `__prefix__` in all field name/id attributes (e.g. "lines-__prefix__-exlexssno").
+         The JS's renumber() function replaces `__prefix__` (or any digit) with
+         the correct sequential index when a new row is cloned and inserted. -->
     <template id="lineTemplate">{% include "postgresql/expire/_row.html" with form=formset.empty_form n="" %}</template>
 
+    <!-- FORMSET VALIDATION ERRORS
+         non_form_errors : errors that apply to the formset as a whole
+                           (e.g. minimum line count not met).
+         Per-form errors : field-level errors for specific rows, listed
+                           as "Line N: <error message(s)>". -->
     {% if formset.non_form_errors %}
       <div class="text-danger exp-lines-error mt-2">{{ formset.non_form_errors.0 }}</div>
     {% endif %}
@@ -46,9 +100,15 @@
         {% for name, errs in form.errors.items %}{{ errs.0 }}{% if not forloop.last %}, {% endif %}{% endfor %}</div>
     {% endif %}{% endfor %}
 
+    <!-- TOTALS ROW & ACTION BUTTONS
+         id="totalLines" : read-only display field kept in sync by expire-form.js
+                           (renumber() updates this whenever rows are added/removed).
+         Cancel : returns to the expire list without saving.
+         Save   : submits the form; expire-form.js validates required fields first. -->
     <div class="row exp-totals">
       <div class="col-md-3">
         <label class="form-label" for="totalLines">Total Lines</label>
+        <!-- Initial value is the number of existing formset forms; JS keeps it updated -->
         <input type="text" id="totalLines" class="form-control" value="{{ formset.forms|length }}" readonly>
       </div>
       <div class="col text-end align-self-end">
@@ -57,6 +117,7 @@
       </div>
     </div>
 
+    <!-- AUDIT INFO — only shown when editing an entry that has been previously modified -->
     {% if obj and obj.exhucdame %}
     <p class="text-muted small mt-3 mb-0">Last updated by <b>{{ obj.exhucdame }}</b> on {{ obj.exhameddt|date:"Y-m-d" }} {{ obj.exhametime|time:"H:i:s" }}</p>
     {% endif %}
@@ -64,4 +125,7 @@
 </div>
 {% endblock %}
 
+<!-- SCRIPTS BLOCK — loads expire-form.js after Bootstrap JS (from base.html).
+     expire-form.js handles: dynamic row add/remove, renumbering,
+     TOTAL_FORMS synchronisation, and client-side required-field validation. -->
 {% block scripts %}<script src="{% static 'assesst/js/expire-form.js' %}"></script>{% endblock %}
