@@ -1,23 +1,36 @@
 {% extends "postgresql/base.html" %}
+{# User Form Template: Used for both Creating (user_add) and Updating (user_edit) users in PostgreSQL #}
+{# Extends base.html #}
+
 {% block title %}{% if obj %}Edit user{% else %}Add user{% endif %}{% endblock %}
 {% block page_title %}{% if obj %}Edit user &middot; {{ obj.usdusd }}{% else %}Add user{% endif %}{% endblock %}
-{% block content %}
-<form method="post" novalidate>
-  {% csrf_token %}
-  {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
 
+{% block content %}
+{# User edit/create form #}
+<form method="post" novalidate>
+  {# Django CSRF Protection token #}
+  {% csrf_token %}
+  
+  {# Display form-level general errors #}
+  {% if form.non_field_errors %}
+  <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+  {% endif %}
+
+  {# Loop over form.sections defined in forms.py (Login Information, User Details, Account Status, Permissions, Limits) #}
   {% for title, fields, is_check in form.sections %}
   <div class="jw-card mb-3">
     <div class="jw-card-head"><h5>{{ title }}</h5></div>
     <div class="jw-card-body">
       <div class="row g-3">
         {% for f in fields %}
+          {# Renders Switch Checkbox for permission & boolean flags #}
           {% if is_check %}
           <div class="col-6 col-md-4 col-xl-3">
             <div class="form-check form-switch">
               {{ f }} <label class="form-check-label" for="{{ f.id_for_label }}">{{ f.label }}</label>
             </div>
           </div>
+          {# Renders Standard Input (text, password, email, number) #}
           {% else %}
           <div class="col-md-6 col-xl-4">
             <label class="form-label fw-semibold" for="{{ f.id_for_label }}">{{ f.label }}</label>
@@ -32,13 +45,18 @@
   </div>
   {% endfor %}
 
+  {# Audit info footer: Displays who last amended this user record and when #}
   {% if obj and obj.usducdame %}
-  <p class="text-muted small">Last updated by <b>{{ obj.usducdame }}</b> on {{ obj.usdameddt|date:"Y-m-d" }} {{ obj.usdametime|time:"H:i:s" }}</p>
+  <p class="text-muted small">
+    Last updated by <b>{{ obj.usducdame }}</b> on {{ obj.usdameddt|date:"Y-m-d" }} {{ obj.usdametime|time:"H:i:s" }}
+  </p>
   {% endif %}
 
+  {# Form Action Buttons: Submit / Save or Cancel back to list #}
   <div class="d-flex gap-2">
     <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Save</button>
     <a href="{% url 'user_list' %}" class="btn btn-light">Cancel</a>
   </div>
 </form>
 {% endblock %}
+

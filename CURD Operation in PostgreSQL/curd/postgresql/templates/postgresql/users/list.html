@@ -1,25 +1,43 @@
 {% extends "postgresql/base.html" %}
+{# User Master List Template: Displays all users in a searchable responsive table #}
+{# Rendered by user_list() in views.py #}
+
 {% block title %}Users{% endblock %}
 {% block page_title %}Users{% endblock %}
+
 {% block content %}
 <div class="jw-card">
+  {# Card Header: Title with user count, Instant client-side search input, and Add User button #}
   <div class="jw-card-head">
     <h5><i class="bi bi-people"></i> User master <span class="text-muted small">({{ users|length }})</span></h5>
     <div class="d-flex gap-2">
+      {# Realtime instant table search input #}
       <input type="search" id="userSearch" class="form-control form-control-sm" placeholder="Search..." style="width:200px">
+      {# Link to User Creation view (user_add) #}
       <a href="{% url 'user_add' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Add User</a>
     </div>
   </div>
+
   <div class="jw-card-body">
     <div class="table-responsive">
+      {# Users Data Table #}
       <table class="table jw-table align-middle" id="userTable">
         <thead>
           <tr>
-            <th>#</th><th>User code</th><th>Name</th><th>Designation</th><th>Email</th>
-            <th>Admin</th><th>Status</th><th>Updated by</th><th>Updated on</th><th class="text-end">Actions</th>
+            <th>#</th>
+            <th>User code</th>
+            <th>Name</th>
+            <th>Designation</th>
+            <th>Email</th>
+            <th>Admin</th>
+            <th>Status</th>
+            <th>Updated by</th>
+            <th>Updated on</th>
+            <th class="text-end">Actions</th>
           </tr>
         </thead>
         <tbody>
+        {# Iterate through Usdmast queryset passed from views.py #}
         {% for u in users %}
           <tr>
             <td>{{ u.usdsno }}</td>
@@ -27,18 +45,30 @@
             <td>{{ u.usdnam|default:"" }}</td>
             <td>{{ u.usddesig }}</td>
             <td>{{ u.usdemail }}</td>
+            {# Admin Badge #}
             <td>{% if u.is_admin %}<span class="badge text-bg-dark">Admin</span>{% else %}<span class="text-muted">-</span>{% endif %}</td>
+            {# Active / Blocked Status Badge #}
             <td>{% if u.is_active_user %}<span class="badge text-bg-success">Active</span>{% else %}<span class="badge text-bg-danger">Blocked</span>{% endif %}</td>
             <td>{{ u.usducdame|default:"-" }}</td>
             <td>{% if u.usdameddt %}{{ u.usdameddt|date:"Y-m-d" }} {{ u.usdametime|time:"H:i:s" }}{% else %}-{% endif %}</td>
+            
+            {# Action Buttons: Edit and Delete #}
             <td class="text-end text-nowrap">
-              <a href="{% url 'user_edit' u.pk %}" class="btn btn-outline-gold btn-sm"><i class="bi bi-pencil"></i></a>
+              {# Edit Button #}
+              <a href="{% url 'user_edit' u.pk %}" class="btn btn-outline-gold btn-sm" title="Edit User">
+                <i class="bi bi-pencil"></i>
+              </a>
+              
+              {# Delete Button: Hidden if this row is the currently logged-in admin to prevent self-deletion #}
               {% if u.pk != usd.pk %}
-              <button type="button" class="btn btn-outline-danger btn-sm js-del" data-url="{% url 'user_delete' u.pk %}" data-name="{{ u.usdusd }}"><i class="bi bi-trash"></i></button>
+              <button type="button" class="btn btn-outline-danger btn-sm js-del" data-url="{% url 'user_delete' u.pk %}" data-name="{{ u.usdusd }}" title="Delete User">
+                <i class="bi bi-trash"></i>
+              </button>
               {% endif %}
             </td>
           </tr>
         {% empty %}
+          {# Fallback when no users exist in database #}
           <tr><td colspan="10" class="text-center text-muted py-4">No users yet.</td></tr>
         {% endfor %}
         </tbody>
@@ -47,13 +77,19 @@
   </div>
 </div>
 
-<!-- delete confirm -->
+{# Delete Confirmation Modal: Appears when clicking any delete button #}
 <div class="modal fade" id="delModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <form method="post" id="delForm" class="modal-content">
+      {# Django CSRF Protection token #}
       {% csrf_token %}
-      <div class="modal-header"><h5 class="modal-title">Delete user</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-      <div class="modal-body">Delete user <b id="delName"></b>? This cannot be undone.</div>
+      <div class="modal-header">
+        <h5 class="modal-title">Delete user</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        Delete user <b id="delName"></b>? This cannot be undone.
+      </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
         <button type="submit" class="btn btn-danger">Delete</button>
@@ -65,12 +101,15 @@
 
 {% block scripts %}
 <script>
+// Client-side live search filter across all table columns
 document.getElementById('userSearch').addEventListener('input', function () {
   var q = this.value.toLowerCase();
   document.querySelectorAll('#userTable tbody tr').forEach(function (tr) {
     tr.style.display = tr.textContent.toLowerCase().indexOf(q) > -1 ? '' : 'none';
   });
 });
+
+// Setup delete confirmation modal dynamically with target URL and username
 var modal = new bootstrap.Modal(document.getElementById('delModal'));
 document.querySelectorAll('.js-del').forEach(function (b) {
   b.addEventListener('click', function () {
@@ -81,3 +120,4 @@ document.querySelectorAll('.js-del').forEach(function (b) {
 });
 </script>
 {% endblock %}
+

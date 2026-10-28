@@ -1,8 +1,13 @@
 {% extends "postgresql/base.html" %}
+{# Dashboard Template: Rendered by dashboard() view in views.py #}
+{# Extends base.html layout and fills in the main dashboard content #}
 {% load static %}
+
 {% block title %}Dashboard{% endblock %}
 {% block page_title %}Dashboard{% endblock %}
+
 {% block content %}
+{# Hero banner showing user welcome greeting, current date, and user email #}
 <section class="jw-hero mb-4">
   <img class="jw-hero-art d-none d-md-block" src="{% static 'assesst/img/hero-art.svg' %}" alt="">
   <h2>Welcome, {{ usd.usdnam|default:usd.usdusd }}</h2>
@@ -11,17 +16,39 @@
   {% if usd.usdemail %}<span class="jw-chip"><i class="bi bi-envelope"></i> {{ usd.usdemail }}</span>{% endif %}
 </section>
 
+{# KPI Cards: Only visible to Administrator users #}
 {% if usd.is_admin %}
 <div class="row g-3">
-  <div class="col-6 col-xl-3"><div class="jw-card jw-kpi"><div class="d-flex justify-content-between">
-    <div><div class="jw-kpi-lbl">Total users</div><div class="jw-kpi-val">{{ stats.total }}</div></div>
-    <div class="jw-kpi-ico"><i class="bi bi-people"></i></div></div></div></div>
-  <div class="col-6 col-xl-3"><div class="jw-card jw-kpi ok"><div class="d-flex justify-content-between">
-    <div><div class="jw-kpi-lbl">Active users</div><div class="jw-kpi-val">{{ stats.active }}</div></div>
-    <div class="jw-kpi-ico"><i class="bi bi-person-check"></i></div></div></div></div>
-  <div class="col-6 col-xl-3"><div class="jw-card jw-kpi"><div class="d-flex justify-content-between">
-    <div><div class="jw-kpi-lbl">Administrators</div><div class="jw-kpi-val">{{ stats.admins }}</div></div>
-    <div class="jw-kpi-ico"><i class="bi bi-shield-lock"></i></div></div></div></div>
+  {# Total registered users card #}
+  <div class="col-6 col-xl-3">
+    <div class="jw-card jw-kpi">
+      <div class="d-flex justify-content-between">
+        <div><div class="jw-kpi-lbl">Total users</div><div class="jw-kpi-val">{{ stats.total }}</div></div>
+        <div class="jw-kpi-ico"><i class="bi bi-people"></i></div>
+      </div>
+    </div>
+  </div>
+
+  {# Active users card #}
+  <div class="col-6 col-xl-3">
+    <div class="jw-card jw-kpi ok">
+      <div class="d-flex justify-content-between">
+        <div><div class="jw-kpi-lbl">Active users</div><div class="jw-kpi-val">{{ stats.active }}</div></div>
+        <div class="jw-kpi-ico"><i class="bi bi-person-check"></i></div>
+      </div>
+    </div>
+  </div>
+
+  {# Administrators count card #}
+  <div class="col-6 col-xl-3">
+    <div class="jw-card jw-kpi">
+      <div class="d-flex justify-content-between">
+        <div><div class="jw-kpi-lbl">Administrators</div><div class="jw-kpi-val">{{ stats.admins }}</div></div>
+        <div class="jw-kpi-ico"><i class="bi bi-shield-lock"></i></div>
+      </div>
+    </div>
+  </div>
 </div>
 {% endif %}
 {% endblock %}
+
