@@ -1,40 +1,258 @@
-/* JW Africa - Login page */
-body.jw-login{margin:0;min-height:100vh;background:var(--jw-ink);font-family:'Inter',system-ui,sans-serif;}
-.jw-login-wrap{display:flex;min-height:100vh;}
-.jw-login-hero{flex:1.15;position:relative;overflow:hidden;color:#f4ead2;display:flex;flex-direction:column;justify-content:space-between;padding:3rem 3.5rem;
-  background-color:#17130E;
-  background-image:url('../img/login-photo.jpg'),url('../img/login-bg.svg');
-  background-size:cover;background-position:center;}
-.jw-login-hero::before{content:"";position:absolute;inset:0;background:linear-gradient(160deg,rgba(23,19,14,.55),rgba(23,19,14,.9));}
-.jw-login-hero>*{position:relative;z-index:1;}
-.jw-login-hero .brand{display:flex;align-items:center;gap:.8rem;}
-.jw-login-hero .brand img{width:54px;height:54px;}
-.jw-login-hero .brand span{font-family:'Playfair Display',serif;font-size:1.7rem;color:var(--jw-gold-light);font-weight:700;}
-.jw-login-hero h1{font-size:2.9rem;line-height:1.1;color:#fff;max-width:520px;margin:0 0 1rem;}
-.jw-login-hero h1 em{font-style:normal;background:var(--jw-gold-grad);-webkit-background-clip:text;background-clip:text;color:transparent;}
-.jw-login-hero p{max-width:460px;color:#cdbf9d;font-size:1.02rem;}
-.jw-login-hero .gems{display:flex;gap:1.4rem;margin-top:1.6rem;}
-.jw-login-hero .gems img{width:64px;height:64px;opacity:.95;filter:drop-shadow(0 6px 14px rgba(0,0,0,.5));transition:transform .3s;}
-.jw-login-hero .gems img:hover{transform:translateY(-6px) rotate(-4deg);}
-.jw-login-hero small{color:#8d8167;}
-.jw-login-panel{flex:.85;display:flex;align-items:center;justify-content:center;padding:2rem;background:var(--jw-ivory);}
-.jw-login-card{width:100%;max-width:420px;}
-.jw-login-card .logo-m{display:none;width:64px;margin-bottom:1rem;}
-.jw-login-card h2{font-size:2rem;margin-bottom:.25rem;}
-.jw-login-card .sub{color:var(--jw-muted);margin-bottom:1.6rem;}
-.jw-input{position:relative;margin-bottom:1.1rem;}
-.jw-input>i.lead-ico{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--jw-gold-dark);font-size:1.05rem;pointer-events:none;}
-.jw-input .form-control{padding:.8rem 2.6rem .8rem 2.6rem;height:52px;}
-.jw-input .toggle-pwd{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:0;background:transparent;color:var(--jw-muted);padding:.5rem .7rem;}
-.jw-input label.error{display:block;color:#b3263a;font-size:.8rem;margin:.3rem 0 0 .2rem;}
-.jw-input .form-control.error{border-color:#d9566a;}
-.jw-login-card .btn-signin{height:52px;font-size:1rem;letter-spacing:.5px;}
-.jw-login-card .links{display:flex;justify-content:space-between;align-items:center;margin:.2rem 0 1.3rem;font-size:.87rem;}
-.jw-login-card .links a{color:var(--jw-gold-dark);text-decoration:none;font-weight:600;}
-.jw-login-card .links a:hover{text-decoration:underline;}
-.jw-login-foot{margin-top:2rem;text-align:center;color:var(--jw-muted);font-size:.78rem;}
-@media (max-width:991.98px){
-  .jw-login-hero{display:none;}
-  .jw-login-panel{background:linear-gradient(180deg,var(--jw-ivory),var(--jw-sand));}
-  .jw-login-card .logo-m{display:block;}
+/* =============================================================================
+   postgresql/static/assesst/css/jw-login.css  -  Login Page Layout and Styles
+   =============================================================================
+   Provides styling for the two-column authentication interface:
+     - Left column (.jw-login-hero): Dark brand hero image, tagline, jewelry icons.
+     - Right column (.jw-login-panel): Clean input form, credentials box, signin button.
+   Includes responsive breakpoints for mobile screens (hides left hero).
+
+   Connected Files:
+     - templates/postgresql/login.html (main login template)
+     - static/assesst/css/jw-theme.css (defines CSS variables like --jw-ink, --jw-gold-light)
+     - postgresql/views.py -> login_view() (serves login.html)
+   ============================================================================= */
+
+/* Page body styling for the login screen */
+body.jw-login {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--jw-ink);
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* Outer split-screen flex wrapper container */
+.jw-login-wrap {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* -----------------------------------------------------------------------------
+   LEFT COLUMN: BRAND HERO PANEL
+   ----------------------------------------------------------------------------- */
+.jw-login-hero {
+  flex: 1.15;
+  position: relative;
+  overflow: hidden;
+  color: #f4ead2;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 3rem 3.5rem;
+  background-color: #17130E;
+  background-image: url('../img/login-photo.jpg'), url('../img/login-bg.svg');
+  background-size: cover;
+  background-position: center;
+}
+
+/* Semi-transparent dark overlay over hero background */
+.jw-login-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(160deg, rgba(23,19,14,.55), rgba(23,19,14,.9));
+}
+
+/* Ensure hero text content stays above dark overlay layer */
+.jw-login-hero > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Brand header with logo icon and title */
+.jw-login-hero .brand {
+  display: flex;
+  align-items: center;
+  gap: .8rem;
+}
+
+.jw-login-hero .brand img {
+  width: 54px;
+  height: 54px;
+}
+
+.jw-login-hero .brand span {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.7rem;
+  color: var(--jw-gold-light);
+  font-weight: 700;
+}
+
+/* Main hero heading with gold gradient accent */
+.jw-login-hero h1 {
+  font-size: 2.9rem;
+  line-height: 1.1;
+  color: #fff;
+  max-width: 520px;
+  margin: 0 0 1rem;
+}
+
+.jw-login-hero h1 em {
+  font-style: normal;
+  background: var(--jw-gold-grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Subtitle description paragraph */
+.jw-login-hero p {
+  max-width: 460px;
+  color: #cdbf9d;
+  font-size: 1.02rem;
+}
+
+/* Jewelry floating showcase icons (Ring, Necklace, Earring, Diamond) */
+.jw-login-hero .gems {
+  display: flex;
+  gap: 1.4rem;
+  margin-top: 1.6rem;
+}
+
+.jw-login-hero .gems img {
+  width: 64px;
+  height: 64px;
+  opacity: .95;
+  filter: drop-shadow(0 6px 14px rgba(0,0,0,.5));
+  transition: transform .3s;
+}
+
+/* Interactive hover tilt animation on jewelry icons */
+.jw-login-hero .gems img:hover {
+  transform: translateY(-6px) rotate(-4deg);
+}
+
+.jw-login-hero small {
+  color: #8d8167;
+}
+
+/* -----------------------------------------------------------------------------
+   RIGHT COLUMN: LOGIN FORM PANEL
+   ----------------------------------------------------------------------------- */
+.jw-login-panel {
+  flex: .85;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: var(--jw-ivory);
+}
+
+/* Card containing input fields */
+.jw-login-card {
+  width: 100%;
+  max-width: 420px;
+}
+
+/* Mobile brand logo (visible only on mobile when hero is hidden) */
+.jw-login-card .logo-m {
+  display: none;
+  width: 64px;
+  margin-bottom: 1rem;
+}
+
+.jw-login-card h2 {
+  font-size: 2rem;
+  margin-bottom: .25rem;
+}
+
+.jw-login-card .sub {
+  color: var(--jw-muted);
+  margin-bottom: 1.6rem;
+}
+
+/* Input container with leading icon */
+.jw-input {
+  position: relative;
+  margin-bottom: 1.1rem;
+}
+
+/* Leading input field icon (User / Lock) */
+.jw-input > i.lead-ico {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--jw-gold-dark);
+  font-size: 1.05rem;
+  pointer-events: none;
+}
+
+/* Text box with padding offset for icons */
+.jw-input .form-control {
+  padding: .8rem 2.6rem .8rem 2.6rem;
+  height: 52px;
+}
+
+/* Eye button to show/hide password text */
+.jw-input .toggle-pwd {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 0;
+  background: transparent;
+  color: var(--jw-muted);
+  padding: .5rem .7rem;
+}
+
+/* Error message and validation styles */
+.jw-input label.error {
+  display: block;
+  color: #b3263a;
+  font-size: .8rem;
+  margin: .3rem 0 0 .2rem;
+}
+
+.jw-input .form-control.error {
+  border-color: #d9566a;
+}
+
+/* Sign-in submit button */
+.jw-login-card .btn-signin {
+  height: 52px;
+  font-size: 1rem;
+  letter-spacing: .5px;
+}
+
+/* Remember me & Forgot password links row */
+.jw-login-card .links {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: .2rem 0 1.3rem;
+  font-size: .87rem;
+}
+
+.jw-login-card .links a {
+  color: var(--jw-gold-dark);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.jw-login-card .links a:hover {
+  text-decoration: underline;
+}
+
+/* Footer copyright notice */
+.jw-login-foot {
+  margin-top: 2rem;
+  text-align: center;
+  color: var(--jw-muted);
+  font-size: .78rem;
+}
+
+/* -----------------------------------------------------------------------------
+   RESPONSIVE MOBILE BREAKPOINTS (< 992px)
+   ----------------------------------------------------------------------------- */
+@media (max-width: 991.98px) {
+  /* Hide heavy graphic hero panel on smartphones and tablets */
+  .jw-login-hero {
+    display: none;
+  }
+  .jw-login-panel {
+    background: linear-gradient(180deg, var(--jw-ivory), var(--jw-sand));
+  }
+  .jw-login-card .logo-m {
+    display: block;
+  }
 }

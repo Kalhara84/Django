@@ -1,8 +1,76 @@
-/* JW Africa - local fonts (no internet / CDN needed) */
-@font-face{font-family:'Inter';font-style:normal;font-weight:400;font-display:swap;src:url('../fonts/jw/inter-latin-400-normal.woff2') format('woff2');}
-@font-face{font-family:'Inter';font-style:normal;font-weight:500;font-display:swap;src:url('../fonts/jw/inter-latin-500-normal.woff2') format('woff2');}
-@font-face{font-family:'Inter';font-style:normal;font-weight:600;font-display:swap;src:url('../fonts/jw/inter-latin-600-normal.woff2') format('woff2');}
-@font-face{font-family:'Inter';font-style:normal;font-weight:700;font-display:swap;src:url('../fonts/jw/inter-latin-700-normal.woff2') format('woff2');}
-@font-face{font-family:'Playfair Display';font-style:normal;font-weight:500;font-display:swap;src:url('../fonts/jw/playfair-display-latin-500-normal.woff2') format('woff2');}
-@font-face{font-family:'Playfair Display';font-style:normal;font-weight:600;font-display:swap;src:url('../fonts/jw/playfair-display-latin-600-normal.woff2') format('woff2');}
-@font-face{font-family:'Playfair Display';font-style:normal;font-weight:700;font-display:swap;src:url('../fonts/jw/playfair-display-latin-700-normal.woff2') format('woff2');}
+/* =============================================================================
+   postgresql/static/assesst/css/jw-fonts.css  -  Offline Web Fonts Definition
+   =============================================================================
+   Loads the Inter and Playfair Display fonts locally from the static fonts folder.
+   Ensures the system runs completely offline without requiring any CDN or internet.
+
+   Connected Files:
+     - static/assesst/fonts/jw/* (WOFF2 font binary files)
+     - templates/postgresql/base.html (linked in HTML head)
+     - templates/postgresql/login.html (uses Inter and Playfair Display)
+   ============================================================================= */
+
+/* Inter Font (Sans-Serif): Used for UI body text, forms, tables, and buttons */
+/* Regular weight (400) */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../fonts/jw/inter-latin-400-normal.woff2') format('woff2');
+}
+
+/* Medium weight (500) */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('../fonts/jw/inter-latin-500-normal.woff2') format('woff2');
+}
+
+/* Semi-bold weight (600) */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('../fonts/jw/inter-latin-600-normal.woff2') format('woff2');
+}
+
+/* Bold weight (700) */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('../fonts/jw/inter-latin-700-normal.woff2') format('woff2');
+}
+
+/* Playfair Display Font (Serif): Used for luxury branding, headings, and logos */
+/* Medium weight (500) */
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('../fonts/jw/playfair-display-latin-500-normal.woff2') format('woff2');
+}
+
+/* Semi-bold weight (600) */
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('../fonts/jw/playfair-display-latin-600-normal.woff2') format('woff2');
+}
+
+/* Bold weight (700) */
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('../fonts/jw/playfair-display-latin-700-normal.woff2') format('woff2');
+}
