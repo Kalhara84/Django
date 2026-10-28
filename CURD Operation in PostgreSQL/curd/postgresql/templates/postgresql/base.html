@@ -1,36 +1,81 @@
-{% load static %}<!DOCTYPE html>
+﻿{% load static %}<!-- Load Django's static file tag library so {% static '...' %} resolves asset URLs -->
+<!DOCTYPE html>
 <html lang="en">
 <head>
+<!-- ============================================================
+     BASE.HTML — Master layout template for the entire application.
+     All page templates (dashboard, users, expire, etc.) extend this
+     file using {% extends "postgresql/base.html" %} and fill in the
+     named {% block %} slots defined here.
+
+     Context variables available on every page (injected by middleware
+     or views):
+       - APP_NAME  : The application name string (e.g. "JW Jewellers")
+       - usd       : The currently logged-in user object (from session)
+       - messages  : Django's one-time flash-message list
+     ============================================================ -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- {% block title %} lets child templates override the browser tab title.
+     Falls back to "Dashboard" if no child block is defined. -->
 <title>{% block title %}Dashboard{% endblock %} | {{ APP_NAME }}</title>
+<!-- Favicon — resolved via Django's static-file system -->
 <link rel="icon" type="image/svg+xml" href="{% static 'assesst/img/jw-logo.svg' %}">
+<!-- Bootstrap 5 CSS — provides the grid, utility classes, and component styles -->
 <link rel="stylesheet" href="{% static 'assesst/bootstrap/bootstrap-5.3.3.min.css' %}">
+<!-- Bootstrap Icons icon font -->
 <link rel="stylesheet" href="{% static 'assesst/icons/bootstrap-icons/bootstrap-icons.min.css' %}">
+<!-- Custom font definitions for the JW brand -->
 <link rel="stylesheet" href="{% static 'assesst/css/jw-fonts.css' %}">
+<!-- JW application theme — colours, sidebar, topbar, card styles, etc. -->
 <link rel="stylesheet" href="{% static 'assesst/css/jw-theme.css' %}">
+<!-- {% block head %} lets child templates inject extra <link> or <style> tags
+     into the <head> without touching this file (e.g. expire.css). -->
 {% block head %}{% endblock %}
 </head>
 <body class="jw-body">
+<!-- {% with %} creates a scoped variable `page` holding the URL name of the
+     current request (e.g. 'dashboard', 'user_list', 'expire_add').
+     This is used below to apply the "active" CSS class to the correct
+     sidebar navigation link. -->
 {% with page=request.resolver_match.url_name %}
+<!-- Semi-transparent backdrop that appears on mobile when the sidebar is open.
+     Clicking it closes the sidebar (handled by the inline JS at the bottom). -->
 <div class="jw-backdrop" id="jwBackdrop"></div>
 
+<!-- ============================================================
+     SIDEBAR — Left navigation panel.
+     On large screens it is always visible; on small screens it slides
+     in/out via the toggle button in the topbar.
+     {% url 'dashboard' %} generates the URL for the named URL pattern.
+     {% if page == '...' %} adds the "active" class to the current page link.
+     {% if usd.is_admin %} hides the Administration section from non-admins.
+     ============================================================ -->
 <aside class="jw-sidebar" id="jwSidebar">
+  <!-- Brand / logo area — clicking takes the user to the Dashboard -->
   <a class="jw-brand" href="{% url 'dashboard' %}">
     <img src="{% static 'assesst/img/jw-logo.svg' %}" alt="">
+    <!-- APP_NAME is a context variable set in settings/middleware -->
     <div><div class="t1">{{ APP_NAME }}</div><div class="t2">Jewellers</div></div>
   </a>
   <nav>
     <div class="jw-nav-title">Main</div>
+    <!-- Dashboard link — highlighted when page == 'dashboard' -->
     <a class="jw-link {% if page == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a>
 
+    <!-- Expire Module link — highlighted for any expire-related page -->
     <a class="jw-link {% if page == 'expire_list' or page == 'expire_add' or page == 'expire_edit' %}active{% endif %}" href="{% url 'expire_list' %}"><i class="bi bi-hourglass-split"></i> Expire Module</a>
 
+    <!-- Administration section is only visible to admin users -->
     {% if usd.is_admin %}
     <div class="jw-nav-title">Administration</div>
+    <!-- Users link — highlighted for any user management page -->
     <a class="jw-link {% if page == 'user_list' or page == 'user_add' or page == 'user_edit' %}active{% endif %}" href="{% url 'user_list' %}"><i class="bi bi-people"></i> Users</a>
     {% endif %}
   </nav>
+  <!-- Sidebar footer — holds the Logout button.
+       Uses a POST form with a CSRF token because Django's logout view
+       requires a POST request to prevent CSRF-based logout attacks. -->
   <div class="jw-side-foot">
     <form method="post" action="{% url 'logout' %}">
       {% csrf_token %}
@@ -39,33 +84,61 @@
   </div>
 </aside>
 
+<!-- ============================================================
+     MAIN CONTENT WRAPPER — Contains topbar, flash messages, page
+     content, and footer.
+     ============================================================ -->
 <div class="jw-main">
+  <!-- TOPBAR — horizontal bar at the top of the page.
+       Contains: mobile sidebar toggle, dynamic page title, and
+       currently logged-in user info. -->
   <header class="jw-topbar">
+    <!-- Mobile-only hamburger button — hidden on lg+ screens (d-lg-none).
+         Clicking it toggles the sidebar open/closed. -->
     <button class="btn btn-outline-gold btn-sm d-lg-none" id="jwToggle" type="button"><i class="bi bi-list"></i></button>
+    <!-- {% block page_title %} — child templates override this to set the
+         heading text shown in the topbar (e.g. "Users", "Expire Module"). -->
     <h1 class="jw-page-title">{% block page_title %}Dashboard{% endblock %}</h1>
+    <!-- Logged-in user info displayed at the right side of the topbar.
+         usd.usdnam  : the user's display name
+         usd.usdusd  : the user's login code (username)
+         usd.is_admin: boolean — true if the user has admin privileges -->
     <div class="jw-user ms-auto">
       <div class="text-end d-none d-sm-block lh-sm">
         <div class="fw-semibold">{{ usd.usdnam|default:usd.usdusd }}</div>
         <small class="text-muted">{{ usd.usdusd }}{% if usd.is_admin %} &middot; Admin{% endif %}</small>
       </div>
+      <!-- Avatar circle — shows the first letter of the username in uppercase -->
       <div class="jw-avatar">{{ usd.usdusd|slice:":1"|upper }}</div>
     </div>
   </header>
 
+  <!-- MAIN CONTENT AREA — all page-specific HTML goes inside {% block content %} -->
   <main class="jw-content">
+    <!-- Flash messages — Django's messaging framework passes one-time
+         notifications (success, error, warning) via the `messages`
+         context variable. Each message is shown as a dismissible Bootstrap
+         alert. The tag is mapped: 'error' -> 'danger', 'success' -> 'success',
+         anything else -> 'warning'. -->
     {% for m in messages %}
     <div class="alert alert-{% if m.tags == 'error' %}danger{% elif m.tags == 'success' %}success{% else %}warning{% endif %} alert-dismissible fade show" role="alert">
       {{ m }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
     {% endfor %}
+    <!-- {% block content %} is the primary slot that every child template fills
+         with its own page body HTML. -->
     {% block content %}{% endblock %}
   </main>
 
+  <!-- FOOTER — displays the current 4-digit year via {% now "Y" %} and the app name -->
   <footer class="jw-footer">&copy; {% now "Y" %} {{ APP_NAME }} Jewellers</footer>
 </div>
 {% endwith %}
 
+<!-- Bootstrap JS bundle (includes Popper.js) — required for modals, dropdowns, etc. -->
 <script src="{% static 'assesst/bootstrap/bootstrap.bundle.min.js' %}"></script>
+<!-- Inline JS — mobile sidebar open/close toggle logic.
+     Wrapped in an IIFE to avoid polluting the global scope. -->
 <script>
 (function () {
   var sb = document.getElementById('jwSidebar'), bd = document.getElementById('jwBackdrop');
@@ -75,6 +148,8 @@
   bd.addEventListener('click', function () { toggle(false); });
 })();
 </script>
+<!-- {% block scripts %} lets child templates append page-specific <script> tags
+     after Bootstrap JS has loaded (e.g. expire-form.js, inline search JS). -->
 {% block scripts %}{% endblock %}
 </body>
 </html>

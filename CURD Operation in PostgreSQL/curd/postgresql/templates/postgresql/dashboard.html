@@ -1,24 +1,54 @@
+﻿<!-- DASHBOARD.HTML — Main dashboard page.
+     {% extends %} tells Django to use base.html as the outer shell.
+     This template only defines the {% block %} slots it needs to fill;
+     everything else (sidebar, topbar, footer, flash messages) is
+     inherited from base.html automatically. -->
 {% extends "postgresql/base.html" %}
 {% load static %}
+<!-- Override the browser tab title block from base.html -->
 {% block title %}Dashboard{% endblock %}
+<!-- Override the topbar heading block from base.html -->
 {% block page_title %}Dashboard{% endblock %}
+
+<!-- CONTENT BLOCK — this is the only section unique to the dashboard page.
+     It is injected into the <main class="jw-content"> area of base.html. -->
 {% block content %}
+<!-- Hero / welcome banner section.
+     usd.usdnam  : the user's full display name (falls back to login code if blank)
+     usd.usdusd  : the user's login code (username)
+     APP_NAME    : application name string injected by context processor
+     {% now %}   : Django tag that outputs the current date/time in the given format -->
 <section class="jw-hero mb-4">
   <img class="jw-hero-art d-none d-md-block" src="{% static 'assesst/img/hero-art.svg' %}" alt="">
   <h2>Welcome, {{ usd.usdnam|default:usd.usdusd }}</h2>
   <p>You are signed in to {{ APP_NAME }}.</p>
   <span class="jw-chip"><i class="bi bi-calendar3"></i> {% now "l, d F Y" %}</span>
+  <!-- Email chip — only shown if the logged-in user has an email address stored -->
   {% if usd.usdemail %}<span class="jw-chip"><i class="bi bi-envelope"></i> {{ usd.usdemail }}</span>{% endif %}
 </section>
 
+<!-- ADMIN-ONLY STATISTICS CARDS SECTION
+     {% if usd.is_admin %} guards this entire block so that only users
+     whose usdadmin flag is set (is_admin property returns True) can see
+     the KPI cards. Regular (non-admin) users see nothing here.
+
+     The `stats` dict is populated by the dashboard view in views.py and
+     passed to the template via context:
+       stats.total  : total number of users in the system
+       stats.active : number of users whose status is Active
+       stats.admins : number of users with admin privileges
+-->
 {% if usd.is_admin %}
 <div class="row g-3">
+  <!-- KPI card: Total Users -->
   <div class="col-6 col-xl-3"><div class="jw-card jw-kpi"><div class="d-flex justify-content-between">
     <div><div class="jw-kpi-lbl">Total users</div><div class="jw-kpi-val">{{ stats.total }}</div></div>
     <div class="jw-kpi-ico"><i class="bi bi-people"></i></div></div></div></div>
+  <!-- KPI card: Active Users — uses the 'ok' variant for a green accent -->
   <div class="col-6 col-xl-3"><div class="jw-card jw-kpi ok"><div class="d-flex justify-content-between">
     <div><div class="jw-kpi-lbl">Active users</div><div class="jw-kpi-val">{{ stats.active }}</div></div>
     <div class="jw-kpi-ico"><i class="bi bi-person-check"></i></div></div></div></div>
+  <!-- KPI card: Administrators count -->
   <div class="col-6 col-xl-3"><div class="jw-card jw-kpi"><div class="d-flex justify-content-between">
     <div><div class="jw-kpi-lbl">Administrators</div><div class="jw-kpi-val">{{ stats.admins }}</div></div>
     <div class="jw-kpi-ico"><i class="bi bi-shield-lock"></i></div></div></div></div>

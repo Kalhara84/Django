@@ -1,26 +1,51 @@
-{% load static %}<!DOCTYPE html>
+﻿{% load static %}<!-- Load Django's static file tag library for {% static '...' %} URL resolution -->
+<!DOCTYPE html>
+<!-- LOGIN.HTML — Standalone login page.
+     This template does NOT extend base.html because the login screen
+     has its own full-page two-column layout with no sidebar or topbar.
+     It loads its own CSS (jw-login.css) and has no navigation elements. -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Login | {{ APP_NAME }}</title>
+<!-- Favicon -->
 <link rel="icon" type="image/svg+xml" href="{% static 'assesst/img/jw-logo.svg' %}">
+<!-- Bootstrap 5 CSS -->
 <link rel="stylesheet" href="{% static 'assesst/bootstrap/bootstrap-5.3.3.min.css' %}">
+<!-- Bootstrap Icons -->
 <link rel="stylesheet" href="{% static 'assesst/icons/bootstrap-icons/bootstrap-icons.min.css' %}">
+<!-- Custom font definitions -->
 <link rel="stylesheet" href="{% static 'assesst/css/jw-fonts.css' %}">
+<!-- JW application theme -->
 <link rel="stylesheet" href="{% static 'assesst/css/jw-theme.css' %}">
+<!-- Login-specific styles — defines the two-column split layout,
+     the hero gradient panel, the card, and the input icon wrappers -->
 <link rel="stylesheet" href="{% static 'assesst/css/jw-login.css' %}">
 </head>
 
+<!-- jw-login class applies the full-viewport login background style -->
 <body class="jw-login">
+<!-- ============================================================
+     TWO-COLUMN LOGIN LAYOUT
+     jw-login-wrap is a CSS Grid / Flexbox container that places:
+       - LEFT  column (.jw-login-hero)  : Branding / artwork panel
+       - RIGHT column (.jw-login-panel) : The actual login form card
+     On small screens the hero column is hidden and only the form is shown.
+     ============================================================ -->
 <div class="jw-login-wrap">
 
+  <!-- LEFT COLUMN — Hero / branding panel.
+       Displays the app logo, a marketing tagline, decorative jewellery
+       SVG icons, and a copyright notice.
+       This section is purely visual and contains no interactive elements. -->
   <!-- left : brand / artwork -->
   <section class="jw-login-hero">
     <div class="brand"><img src="{% static 'assesst/img/jw-logo.svg' %}" alt="{{ APP_NAME }}"><span>{{ APP_NAME }}</span></div>
     <div>
       <h1>Crafting trust,<br><em>one gem at a time.</em></h1>
       <p>Stock, customers, suppliers and pricing for your jewellery business &mdash; all in one elegant place.</p>
+      <!-- Decorative jewellery image strip -->
       <div class="gems">
         <img src="{% static 'assesst/img/diamond.svg' %}"  alt="diamond">
         <img src="{% static 'assesst/img/ring.svg' %}"     alt="ring">
@@ -29,32 +54,56 @@
         <img src="{% static 'assesst/img/bangle.svg' %}"   alt="bangle">
       </div>
     </div>
+    <!-- Dynamic year via Django's {% now %} template tag -->
     <small>&copy; {% now "Y" %} {{ APP_NAME }} Jewellers</small>
   </section>
 
+  <!-- RIGHT COLUMN — Login form panel.
+       Contains the login card with the username/password form,
+       optional error message, "Remember me" checkbox, and submit button. -->
   <!-- right : login form -->
   <section class="jw-login-panel">
     <div class="jw-login-card">
+      <!-- Mobile-only logo (the hero panel is hidden on small screens) -->
       <img class="logo-m" src="{% static 'assesst/img/jw-logo.svg' %}" alt="{{ APP_NAME }}">
       <h2>Welcome back</h2>
       <p class="sub">Sign in to continue to your dashboard.</p>
 
+      <!-- LOGIN FORM
+           method="post"   : credentials must be sent via POST, never GET
+           autocomplete="off": prevents browser from auto-filling the form fields -->
       <form method="post" action="" id="login" autocomplete="off">
+        <!-- CSRF TOKEN — Django requires this hidden token on every POST form
+             to protect against Cross-Site Request Forgery attacks.
+             Without it the view will return a 403 Forbidden error. -->
         {% csrf_token %}
+        <!-- Error message — the view passes `error` in context when login fails
+             (e.g. wrong password or unknown username). -->
         {% if error %}
         <div class="alert alert-danger py-2 mb-3"><i class="bi bi-x-circle"></i> <b>{{ error }}</b></div>
         {% endif %}
 
+        <!-- Username field — wrapped in jw-input for icon + input styling.
+             name="usdusd" matches the POST key the view reads with request.POST.get('usdusd').
+             value="{{ usdusd }}" re-populates the field after a failed login attempt. -->
         <div class="jw-input">
           <i class="bi bi-person lead-ico"></i>
           <input type="text" name="usdusd" id="usdusd" value="{{ usdusd }}" class="form-control" placeholder="User Name" autocomplete="off" required autofocus>
         </div>
+        <!-- Password field — type="password" hides the typed characters.
+             The toggle button (below) switches it between "password" and "text" via JS. -->
         <div class="jw-input">
           <i class="bi bi-lock lead-ico"></i>
           <input type="password" name="usdpwd" id="usdpwd" class="form-control" placeholder="Password" autocomplete="off" required>
+          <!-- Password show/hide toggle button — clicking this runs the inline JS
+               at the bottom of the page to flip the input type and the eye icon. -->
           <button type="button" class="toggle-pwd" id="togglePwd" tabindex="-1" aria-label="Show password"><i class="bi bi-eye"></i></button>
         </div>
 
+        <!-- REMEMBER ME CHECKBOX
+             When checked, the view sets a longer session expiry so the user
+             stays logged in across browser restarts.
+             name="remember" / value="1" — view checks request.POST.get('remember') == '1'. -->
         <div class="links">
           <div class="form-check m-0">
             <input class="form-check-input" type="checkbox" name="remember" id="remember" value="1">
@@ -70,6 +119,11 @@
   </section>
 </div>
 
+<!-- PASSWORD SHOW / HIDE SCRIPT
+     Toggles the password input between type="password" (masked) and
+     type="text" (visible) when the eye-icon button is clicked.
+     The icon class is swapped between bi-eye and bi-eye-slash to give
+     visual feedback about the current state. -->
 <script>
 document.getElementById('togglePwd').addEventListener('click', function () {
   var f = document.getElementById('usdpwd'), show = f.type === 'password';

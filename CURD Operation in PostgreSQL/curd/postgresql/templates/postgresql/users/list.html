@@ -1,17 +1,30 @@
+﻿<!-- USERS/LIST.HTML — User management list page.
+     Extends base.html to inherit sidebar, topbar, flash messages, and footer.
+     The `users` context variable is a queryset of all user records,
+     passed from the user_list view in views.py.
+     The `usd` variable is the currently logged-in user (used below
+     to prevent a user from deleting their own account). -->
 {% extends "postgresql/base.html" %}
 {% block title %}Users{% endblock %}
 {% block page_title %}Users{% endblock %}
 {% block content %}
 <div class="jw-card">
   <div class="jw-card-head">
+    <!-- Card heading — {{ users|length }} shows the total count of user records -->
     <h5><i class="bi bi-people"></i> User master <span class="text-muted small">({{ users|length }})</span></h5>
     <div class="d-flex gap-2">
+      <!-- LIVE SEARCH INPUT
+           The keyup/input event in the {% block scripts %} section below
+           filters table rows in real time without a server round-trip.
+           id="userSearch" is the hook used by that JavaScript. -->
       <input type="search" id="userSearch" class="form-control form-control-sm" placeholder="Search..." style="width:200px">
+      <!-- Link to the Add User form page -->
       <a href="{% url 'user_add' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Add User</a>
     </div>
   </div>
   <div class="jw-card-body">
     <div class="table-responsive">
+      <!-- id="userTable" is the hook used by the live-search JavaScript -->
       <table class="table jw-table align-middle" id="userTable">
         <thead>
           <tr>
@@ -20,6 +33,20 @@
           </tr>
         </thead>
         <tbody>
+        <!-- USER TABLE LOOP
+             {% for u in users %} iterates over every user record in the queryset.
+             Field reference:
+               u.usdsno     : serial / row number
+               u.usdusd     : login code (username)
+               u.usdnam     : display name
+               u.usddesig   : designation / job title
+               u.usdemail   : email address
+               u.is_admin   : boolean property — true if admin flag is set
+               u.is_active_user : boolean property — true if status is Active
+               u.usducdame  : login code of the user who last modified this record
+               u.usdameddt  : date of last modification
+               u.usdametime : time of last modification
+             {% empty %} is rendered when the queryset is empty (no users). -->
         {% for u in users %}
           <tr>
             <td>{{ u.usdsno }}</td>
@@ -27,12 +54,19 @@
             <td>{{ u.usdnam|default:"" }}</td>
             <td>{{ u.usddesig }}</td>
             <td>{{ u.usdemail }}</td>
+            <!-- Admin badge — shown only when is_admin is True -->
             <td>{% if u.is_admin %}<span class="badge text-bg-dark">Admin</span>{% else %}<span class="text-muted">-</span>{% endif %}</td>
+            <!-- Status badge — green "Active" or red "Blocked" -->
             <td>{% if u.is_active_user %}<span class="badge text-bg-success">Active</span>{% else %}<span class="badge text-bg-danger">Blocked</span>{% endif %}</td>
             <td>{{ u.usducdame|default:"-" }}</td>
+            <!-- Date and time of last update, formatted Y-m-d H:i:s -->
             <td>{% if u.usdameddt %}{{ u.usdameddt|date:"Y-m-d" }} {{ u.usdametime|time:"H:i:s" }}{% else %}-{% endif %}</td>
             <td class="text-end text-nowrap">
+              <!-- Edit button — links to the user edit form for this user's primary key -->
               <a href="{% url 'user_edit' u.pk %}" class="btn btn-outline-gold btn-sm"><i class="bi bi-pencil"></i></a>
+              <!-- DELETE BUTTON — hidden for the currently logged-in user (usd.pk)
+                   to prevent self-deletion. The button carries data attributes
+                   (data-url, data-name) that the JS below passes to the modal. -->
               {% if u.pk != usd.pk %}
               <button type="button" class="btn btn-outline-danger btn-sm js-del" data-url="{% url 'user_delete' u.pk %}" data-name="{{ u.usdusd }}"><i class="bi bi-trash"></i></button>
               {% endif %}
@@ -47,12 +81,22 @@
   </div>
 </div>
 
+<!-- DELETE CONFIRMATION MODAL
+     Bootstrap 5 modal that asks the user to confirm deletion before
+     the form is submitted. The modal is triggered by clicking any
+     .js-del button in the table (see the {% block scripts %} JS below).
+
+     The form inside the modal is a POST form with a CSRF token.
+     The form's action URL and the user name displayed in the body
+     are dynamically set by the JS before the modal is shown. -->
 <!-- delete confirm -->
 <div class="modal fade" id="delModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <form method="post" id="delForm" class="modal-content">
+      <!-- CSRF TOKEN — required on every POST form to prevent CSRF attacks -->
       {% csrf_token %}
       <div class="modal-header"><h5 class="modal-title">Delete user</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <!-- id="delName" is populated by JS with the username being deleted -->
       <div class="modal-body">Delete user <b id="delName"></b>? This cannot be undone.</div>
       <div class="modal-footer">
         <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
@@ -63,14 +107,27 @@
 </div>
 {% endblock %}
 
+<!-- SCRIPTS BLOCK — page-specific JavaScript appended after Bootstrap JS (from base.html) -->
 {% block scripts %}
 <script>
+/* LIVE SEARCH
+   Listens for input events on the search box and hides/shows table rows
+   whose text content does not match the current search query (case-insensitive).
+   No server request is made — all filtering happens client-side. */
 document.getElementById('userSearch').addEventListener('input', function () {
   var q = this.value.toLowerCase();
   document.querySelectorAll('#userTable tbody tr').forEach(function (tr) {
     tr.style.display = tr.textContent.toLowerCase().indexOf(q) > -1 ? '' : 'none';
   });
 });
+/* DELETE MODAL WIRING
+   For each trash (.js-del) button:
+     1. Sets the hidden delete form's action to the URL stored in data-url.
+     2. Puts the username (data-name) into the modal body so the user
+        knows exactly which record they are about to delete.
+     3. Shows the Bootstrap modal.
+   Submitting the modal form sends a POST to the delete view, which
+   performs the actual database deletion and redirects back to this list. */
 var modal = new bootstrap.Modal(document.getElementById('delModal'));
 document.querySelectorAll('.js-del').forEach(function (b) {
   b.addEventListener('click', function () {
