@@ -1,0 +1,78 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Dashboard{% endblock %} | {{ APP_NAME }}</title>
+<link rel="icon" type="image/svg+xml" href="{% static 'assesst/img/jw-logo.svg' %}">
+<link rel="stylesheet" href="{% static 'assesst/bootstrap/bootstrap-5.3.3.min.css' %}">
+<link rel="stylesheet" href="{% static 'assesst/icons/bootstrap-icons/bootstrap-icons.min.css' %}">
+<link rel="stylesheet" href="{% static 'assesst/css/jw-fonts.css' %}">
+<link rel="stylesheet" href="{% static 'assesst/css/jw-theme.css' %}">
+{% block head %}{% endblock %}
+</head>
+<body class="jw-body">
+{% with page=request.resolver_match.url_name %}
+<div class="jw-backdrop" id="jwBackdrop"></div>
+
+<aside class="jw-sidebar" id="jwSidebar">
+  <a class="jw-brand" href="{% url 'dashboard' %}">
+    <img src="{% static 'assesst/img/jw-logo.svg' %}" alt="">
+    <div><div class="t1">{{ APP_NAME }}</div><div class="t2">Jewellers</div></div>
+  </a>
+  <nav>
+    <div class="jw-nav-title">Main</div>
+    <a class="jw-link {% if page == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a>
+
+    {% if usd.is_admin %}
+    <div class="jw-nav-title">Administration</div>
+    <a class="jw-link {% if page == 'user_list' or page == 'user_add' or page == 'user_edit' %}active{% endif %}" href="{% url 'user_list' %}"><i class="bi bi-people"></i> Users</a>
+    {% endif %}
+  </nav>
+  <div class="jw-side-foot">
+    <form method="post" action="{% url 'logout' %}">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-dark-gold btn-sm w-100"><i class="bi bi-box-arrow-right"></i> Logout</button>
+    </form>
+  </div>
+</aside>
+
+<div class="jw-main">
+  <header class="jw-topbar">
+    <button class="btn btn-outline-gold btn-sm d-lg-none" id="jwToggle" type="button"><i class="bi bi-list"></i></button>
+    <h1 class="jw-page-title">{% block page_title %}Dashboard{% endblock %}</h1>
+    <div class="jw-user ms-auto">
+      <div class="text-end d-none d-sm-block lh-sm">
+        <div class="fw-semibold">{{ usd.usdnam|default:usd.usdusd }}</div>
+        <small class="text-muted">{{ usd.usdusd }}{% if usd.is_admin %} &middot; Admin{% endif %}</small>
+      </div>
+      <div class="jw-avatar">{{ usd.usdusd|slice:":1"|upper }}</div>
+    </div>
+  </header>
+
+  <main class="jw-content">
+    {% for m in messages %}
+    <div class="alert alert-{% if m.tags == 'error' %}danger{% elif m.tags == 'success' %}success{% else %}warning{% endif %} alert-dismissible fade show" role="alert">
+      {{ m }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="jw-footer">&copy; {% now "Y" %} {{ APP_NAME }} Jewellers</footer>
+</div>
+{% endwith %}
+
+<script src="{% static 'assesst/bootstrap/bootstrap.bundle.min.js' %}"></script>
+<script>
+(function () {
+  var sb = document.getElementById('jwSidebar'), bd = document.getElementById('jwBackdrop');
+  var t = document.getElementById('jwToggle');
+  function toggle(open) { sb.classList.toggle('open', open); bd.classList.toggle('show', open); }
+  if (t) t.addEventListener('click', function () { toggle(!sb.classList.contains('open')); });
+  bd.addEventListener('click', function () { toggle(false); });
+})();
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

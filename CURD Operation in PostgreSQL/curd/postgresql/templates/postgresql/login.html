@@ -1,0 +1,81 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Login | {{ APP_NAME }}</title>
+<link rel="icon" type="image/svg+xml" href="{% static 'assesst/img/jw-logo.svg' %}">
+<link rel="stylesheet" href="{% static 'assesst/bootstrap/bootstrap-5.3.3.min.css' %}">
+<link rel="stylesheet" href="{% static 'assesst/icons/bootstrap-icons/bootstrap-icons.min.css' %}">
+<link rel="stylesheet" href="{% static 'assesst/css/jw-fonts.css' %}">
+<link rel="stylesheet" href="{% static 'assesst/css/jw-theme.css' %}">
+<link rel="stylesheet" href="{% static 'assesst/css/jw-login.css' %}">
+</head>
+
+<body class="jw-login">
+<div class="jw-login-wrap">
+
+  <!-- left : brand / artwork -->
+  <section class="jw-login-hero">
+    <div class="brand"><img src="{% static 'assesst/img/jw-logo.svg' %}" alt="{{ APP_NAME }}"><span>{{ APP_NAME }}</span></div>
+    <div>
+      <h1>Crafting trust,<br><em>one gem at a time.</em></h1>
+      <p>Stock, customers, suppliers and pricing for your jewellery business &mdash; all in one elegant place.</p>
+      <div class="gems">
+        <img src="{% static 'assesst/img/diamond.svg' %}"  alt="diamond">
+        <img src="{% static 'assesst/img/ring.svg' %}"     alt="ring">
+        <img src="{% static 'assesst/img/necklace.svg' %}" alt="necklace">
+        <img src="{% static 'assesst/img/earring.svg' %}"  alt="earrings">
+        <img src="{% static 'assesst/img/bangle.svg' %}"   alt="bangle">
+      </div>
+    </div>
+    <small>&copy; {% now "Y" %} {{ APP_NAME }} Jewellers</small>
+  </section>
+
+  <!-- right : login form -->
+  <section class="jw-login-panel">
+    <div class="jw-login-card">
+      <img class="logo-m" src="{% static 'assesst/img/jw-logo.svg' %}" alt="{{ APP_NAME }}">
+      <h2>Welcome back</h2>
+      <p class="sub">Sign in to continue to your dashboard.</p>
+
+      <form method="post" action="" id="login" autocomplete="off">
+        {% csrf_token %}
+        {% if error %}
+        <div class="alert alert-danger py-2 mb-3"><i class="bi bi-x-circle"></i> <b>{{ error }}</b></div>
+        {% endif %}
+
+        <div class="jw-input">
+          <i class="bi bi-person lead-ico"></i>
+          <input type="text" name="usdusd" id="usdusd" value="{{ usdusd }}" class="form-control" placeholder="User Name" autocomplete="off" required autofocus>
+        </div>
+        <div class="jw-input">
+          <i class="bi bi-lock lead-ico"></i>
+          <input type="password" name="usdpwd" id="usdpwd" class="form-control" placeholder="Password" autocomplete="off" required>
+          <button type="button" class="toggle-pwd" id="togglePwd" tabindex="-1" aria-label="Show password"><i class="bi bi-eye"></i></button>
+        </div>
+
+        <div class="links">
+          <div class="form-check m-0">
+            <input class="form-check-input" type="checkbox" name="remember" id="remember" value="1">
+            <label class="form-check-label" for="remember">Remember me</label>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-signin w-100">Sign In</button>
+      </form>
+
+      <div class="jw-login-foot"><i class="bi bi-shield-check"></i> Secure staff access only</div>
+    </div>
+  </section>
+</div>
+
+<script>
+document.getElementById('togglePwd').addEventListener('click', function () {
+  var f = document.getElementById('usdpwd'), show = f.type === 'password';
+  f.type = show ? 'text' : 'password';
+  this.querySelector('i').className = show ? 'bi bi-eye-slash' : 'bi bi-eye';
+});
+</script>
+</body>
+</html>
