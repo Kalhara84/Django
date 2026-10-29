@@ -1,55 +1,39 @@
-﻿<!-- EXPIRE/FORM.HTML — Add / Edit expire entry form page.
-     Extends base.html to inherit the full page chrome (sidebar, topbar, etc.).
-     Context variables supplied by the expire_add / expire_edit view:
-       hform   : ExpireHeaderForm instance for the header fields
-       formset : ExpireLineFormSet — a Django inline formset for the detail rows
-       obj     : the existing ExpireHeader model instance (edit) or None (add) -->
+{# expire/form.html - Add / Edit Expire entry page. Extends base.html. Context from expire_views._expire_form: hform, formset, obj. #}
 {% extends "postgresql/base.html" %}
 {% load static %}
 {% block title %}Expire Module{% endblock %}
 {% block page_title %}Expire Module{% endblock %}
-<!-- Inject expire-specific CSS into the base.html <head> via the head block -->
+{# expire.css = styles of this module only #}
 {% block head %}<link rel="stylesheet" href="{% static 'assesst/css/expire.css' %}">{% endblock %}
 
 {% block content %}
+{# Everything is inside .exp-page so expire.css only affects this page #}
 <div class="exp-page">
-  <!-- Dynamic heading — "Edit Expire Entry" when obj exists, "Add Expire Entry" otherwise -->
   <h3 class="exp-title">{% if obj %}Edit Expire Entry{% else %}Add Expire Entry{% endif %}</h3>
   <hr>
 
-  <!-- MAIN FORM
-       id="expForm"  : referenced by expire-form.js for submit validation
-       novalidate    : disables native browser HTML5 validation so that the
-                       custom JS validation in expire-form.js runs instead -->
+  {# MAIN FORM (views.expire_add / expire_edit). One Save button saves the header (exhmast) and all lines (exlmast). #}
   <form method="post" id="expForm" novalidate>
-    <!-- CSRF TOKEN — Django requires this on every POST form -->
+    {# Security token #}
     {% csrf_token %}
 
-    <!-- HEADER FIELDS — Row 1: Document Code, Date, Description
-         Each field is rendered via the reusable _field.html partial template.
-         The `with f=hform.<fieldname>` syntax passes the bound field to the partial.
-         hform.exhdno       : document/entry code field
-         hform.exhddt       : entry date field
-         hform.exhdes       : description text field -->
+    {# HEADER, row 1: Code, Date, Description (HeaderForm in expire_forms.py) #}
     <div class="row g-4 mb-3">
       <div class="col-md-4">{% include "postgresql/expire/_field.html" with f=hform.exhdno %}</div>
       <div class="col-md-4">{% include "postgresql/expire/_field.html" with f=hform.exhddt %}</div>
       <div class="col-md-4">{% include "postgresql/expire/_field.html" with f=hform.exhdes %}</div>
     </div>
-    <!-- HEADER FIELDS — Row 2: Item Category (foreign key dropdown), Location (foreign key dropdown)
-         hform.exhexcsno    : item category select field (maps to ExCategory model)
-         hform.exhexlocsno  : location select field (maps to ExLocation model) -->
+    {# HEADER, row 2: Item Category and Location combo boxes (data from excmast / exlocmast) #}
     <div class="row g-4 mb-4">
       <div class="col-md-4">{% include "postgresql/expire/_field.html" with f=hform.exhexcsno %}</div>
       <div class="col-md-4">{% include "postgresql/expire/_field.html" with f=hform.exhexlocsno %}</div>
+      {# "Add Location" button: opens the pop-up at the bottom of this page (#locModal) #}
+      <div class="col-md-4 exp-addloc">
+        <button type="button" class="btn btn-secondary" id="addLocationBtn" data-bs-toggle="modal" data-bs-target="#locModal">Add Location</button>
+      </div>
     </div>
 
-    <!-- DETAIL LINE TABLE
-         The formset provides one form per existing detail line (when editing)
-         or a single blank form (when adding).
-         Each row is rendered via the _row.html partial template.
-         id="lineBody" is the hook used by expire-form.js to locate the
-         <tbody> when adding or removing rows dynamically. -->
+    {# LINES table: one row = one exlmast record (rows come from LineFormSet) #}
     <div class="table-responsive">
       <table class="table exp-table align-middle">
         <thead>
@@ -58,40 +42,19 @@
             <th>Complete Date</th><th>Cutoff Date</th><th>Actions</th>
           </tr>
         </thead>
-        <!-- id="lineBody" — expire-form.js appends/removes <tr> elements here -->
         <tbody id="lineBody">
-          <!-- FORMSET ROWS LOOP
-               [tag: for form in formset] iterates over each line form in the formset.
-               forloop.counter provides the 1-based row number passed as `n` to _row.html.
-               Each row is rendered by including the _row.html partial. -->
           {% for form in formset %}{% include "postgresql/expire/_row.html" with n=forloop.counter %}{% endfor %}
         </tbody>
       </table>
     </div>
 
-    <!-- DJANGO FORMSET MANAGEMENT FORM
-         [var: formset.management_form] outputs hidden input fields that Django
-         requires to process the formset on the server side:
-           lines-TOTAL_FORMS   : total number of forms (rows) submitted
-           lines-INITIAL_FORMS : number of forms pre-populated from the database
-           lines-MIN_NUM_FORMS : minimum allowed forms
-           lines-MAX_NUM_FORMS : maximum allowed forms
-         expire-form.js keeps lines-TOTAL_FORMS in sync with the actual number
-         of visible rows whenever rows are added or removed. -->
+    {# Hidden fields Django needs (how many rows). expire-form.js keeps TOTAL_FORMS correct. #}
     {{ formset.management_form }}
 
-    <!-- LINE TEMPLATE — hidden <template> element used by expire-form.js
-         to clone new blank rows.  It contains formset.empty_form, which has
-         `__prefix__` in all field name/id attributes (e.g. "lines-__prefix__-exlexssno").
-         The JS's renumber() function replaces `__prefix__` (or any digit) with
-         the correct sequential index when a new row is cloned and inserted. -->
+    {# Blank row copy. The + button clones it (expire-form.js). #}
     <template id="lineTemplate">{% include "postgresql/expire/_row.html" with form=formset.empty_form n="" %}</template>
 
-    <!-- FORMSET VALIDATION ERRORS
-         non_form_errors : errors that apply to the formset as a whole
-                           (e.g. minimum line count not met).
-         Per-form errors : field-level errors for specific rows, listed
-                           as "Line N: <error message(s)>". -->
+    {# Errors of the lines: no rows, or what is wrong in each row #}
     {% if formset.non_form_errors %}
       <div class="text-danger exp-lines-error mt-2">{{ formset.non_form_errors.0 }}</div>
     {% endif %}
@@ -100,15 +63,10 @@
         {% for name, errs in form.errors.items %}{{ errs.0 }}{% if not forloop.last %}, {% endif %}{% endfor %}</div>
     {% endif %}{% endfor %}
 
-    <!-- TOTALS ROW & ACTION BUTTONS
-         id="totalLines" : read-only display field kept in sync by expire-form.js
-                           (renumber() updates this whenever rows are added/removed).
-         Cancel : returns to the expire list without saving.
-         Save   : submits the form; expire-form.js validates required fields first. -->
+    {# Total number of lines, Cancel and Save buttons #}
     <div class="row exp-totals">
       <div class="col-md-3">
         <label class="form-label" for="totalLines">Total Lines</label>
-        <!-- Initial value is the number of existing formset forms; JS keeps it updated -->
         <input type="text" id="totalLines" class="form-control" value="{{ formset.forms|length }}" readonly>
       </div>
       <div class="col text-end align-self-end">
@@ -117,15 +75,44 @@
       </div>
     </div>
 
-    <!-- AUDIT INFO — only shown when editing an entry that has been previously modified -->
+    {# Edit page: who updated this entry last and when #}
     {% if obj and obj.exhucdame %}
     <p class="text-muted small mt-3 mb-0">Last updated by <b>{{ obj.exhucdame }}</b> on {{ obj.exhameddt|date:"Y-m-d" }} {{ obj.exhametime|time:"H:i:s" }}</p>
     {% endif %}
   </form>
+
+  {# "ADD LOCATION" POP-UP. It is outside the main form on purpose (a form cannot be inside a form). #}
+  {# expire-form.js sends it to data-url without reloading the page (views.location_add -> exlocmast), #}
+  {# then adds the new location to the Location combo box. #}
+  <div class="modal fade" id="locModal" tabindex="-1" aria-hidden="true" data-url="{% url 'expire_location_add' %}">
+    <div class="modal-dialog modal-dialog-centered">
+      <form class="modal-content" id="locForm" novalidate>
+        <div class="modal-header">
+          <h5 class="modal-title">Add Location</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label" for="locCode">Location Code <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="locCode" name="exlocloc" maxlength="40" autocomplete="off">
+            <div class="invalid-feedback">Location Code is required</div>
+          </div>
+          <div>
+            <label class="form-label" for="locName">Location Name <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="locName" name="exlocnam" maxlength="40" autocomplete="off">
+            <div class="invalid-feedback">Location Name is required</div>
+          </div>
+          <div class="text-danger small mt-2 d-none" id="locError"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="locSave">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>
 {% endblock %}
 
-<!-- SCRIPTS BLOCK — loads expire-form.js after Bootstrap JS (from base.html).
-     expire-form.js handles: dynamic row add/remove, renumbering,
-     TOTAL_FORMS synchronisation, and client-side required-field validation. -->
+{# expire-form.js: + / - rows, validation, Add Location pop-up #}
 {% block scripts %}<script src="{% static 'assesst/js/expire-form.js' %}"></script>{% endblock %}

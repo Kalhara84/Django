@@ -1,92 +1,90 @@
-
-
+# =============================================================================
+# curd/settings.py - all project settings
+# =============================================================================
+# Important parts:
+#   INSTALLED_APPS      -> our app "postgresql" is registered here
+#   TEMPLATES           -> adds postgresql/context.py to every page
+#   DATABASES           -> PostgreSQL connection (change the name/password for your PC)
+#   LOGIN_URL / SESSION -> used by postgresql/decorators.py and views.py
+# =============================================================================
 from pathlib import Path
 
-
+# Project root folder (the folder that has manage.py)
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
+# Secret key used for sessions and CSRF. Keep it secret in production.
 SECRET_KEY = 'django-insecure-68=x#^w!4nf0@3g-&a@p)6g!p569to@gd+a6382x-an)98pv(s'
 
-
+# DEBUG = True shows detailed errors. Set False in production.
 DEBUG = True
 
-
+# Host names allowed to open the site ('*' = any)
 ALLOWED_HOSTS = ['*']
 
-
-# Application definition: List of all active Django apps in this project.
+# Apps used by this project
 INSTALLED_APPS = [
-    # Built-in Django core apps:
-    'django.contrib.admin',          # Built-in admin panel
-    'django.contrib.auth',           # Authentication system
-    'django.contrib.contenttypes',   # Tracks models installed in Django
-    'django.contrib.sessions',       # Session management (stores user login state)
-    'django.contrib.messages',       # Flash message framework (success/error alerts)
-    'django.contrib.staticfiles',    # Manages static files (CSS, JS, images)
-    
-    # Custom project apps:
-    'postgresql',                    # Our custom app handling user master CRUD & PostgreSQL
+    # Django built-in apps
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',      # login session (used in postgresql/views.py)
+    'django.contrib.messages',      # green/red alert messages
+    'django.contrib.staticfiles',   # css, js, images
+
+    # Our app (models, views, templates, static files)
+    'postgresql',
 ]
 
-# Middleware: Functions that process every request and response globally.
+# Middleware = code that runs on every request/response
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',             # Basic security enhancements
-    'django.contrib.sessions.middleware.SessionMiddleware',       # Enables session support across requests
-    'django.middleware.common.CommonMiddleware',                 # Handles URL rewriting and common web standards
-    'django.middleware.csrf.CsrfViewMiddleware',                 # Protects POST forms against Cross-Site Request Forgery
-    'django.contrib.auth.middleware.AuthenticationMiddleware',   # Associates users with requests using sessions
-    'django.contrib.messages.middleware.MessageMiddleware',       # Enables flash messages across redirects
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',     # Prevents site from being rendered inside an iframe (clickjacking protection)
+    'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',          # checks {% csrf_token %} in forms
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# Root URL configuration module where Django begins URL routing.
-# Points to curd/urls.py.
+# Main URL file -> curd/urls.py
 ROOT_URLCONF = 'curd.urls'
 
-# Template engine configuration: Tells Django how and where to load HTML templates.
+# Where Django finds HTML templates
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        # DIRS: Additional template folders outside apps (empty here since templates are in the app folder)
+        # No extra folders; templates are inside postgresql/templates/
         'DIRS': [],
-        # APP_DIRS: If True, Django automatically looks for a 'templates' folder inside each installed app
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
-                # Built-in context processors: inject variables into all template contexts
-                'django.template.context_processors.request',          # Adds {{ request }} to templates
-                'django.contrib.auth.context_processors.auth',        # Adds {{ user }} to templates
-                'django.contrib.messages.context_processors.messages',# Adds {{ messages }} to templates
-                
-                # Custom context processor:
-                # Located in curd/postgresql/context.py
-                # Injects {{ APP_NAME }} and {{ usd }} into every rendered HTML template
+                # Variables that every template can use
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+
+                # Ours: gives {{ APP_NAME }} and {{ usd }} (logged user), see postgresql/context.py
                 'postgresql.context.app_context',
             ],
         },
     },
 ]
 
-# WSGI application entry point used by production web servers (like Gunicorn / uWSGI).
 WSGI_APPLICATION = 'curd.wsgi.application'
 
-
-# Database Configuration:
-# Connects Django ORM to the PostgreSQL database server.
+# PostgreSQL connection. Change NAME / USER / PASSWORD to match your PC.
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',  # PostgreSQL database engine backend
-        'NAME': 'django_test',                      # Name of the PostgreSQL database
-        'USER': 'postgres',                         # Database username
-        'PASSWORD': 'mypass',                       # Database password
-        'HOST': 'localhost',                        # Database server host (local machine)
-        'PORT': '5432',                             # Default PostgreSQL port
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'django_test',
+        'USER': 'postgres',
+        'PASSWORD': 'mypass',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
 
-
-# Password validation rules for Django's built-in auth system.
+# Rules for Django's own password checking (not used by our usdmast login)
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -102,30 +100,23 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# Language and time zone (audit date/time columns use this time zone)
+LANGUAGE_CODE = 'en-us'
+TIME_ZONE = 'Asia/Colombo'
+USE_I18N = True
+USE_TZ = True
 
-# Internationalization & Localization settings
-LANGUAGE_CODE = 'en-us'            # Default language
-TIME_ZONE = 'Asia/Colombo'         # Project timezone (Sri Lanka time)
-USE_I18N = True                    # Enable Django's translation system
-USE_TZ = True                      # Enable timezone-aware datetimes in database
-
-
-# Static files (CSS, JavaScript, Images) configuration.
-# The URL prefix used to serve static files in the browser (e.g. /static/css/style.css).
+# URL prefix for css/js/images (files are in postgresql/static/)
 STATIC_URL = 'static/'
 
-# Default auto-generated primary key field type for models (64-bit integer BigAutoField).
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-
-# ---- Custom Login / Session Settings for Usdmast Table ----
-
-# URL name to redirect unauthenticated users when they try to access protected views.
+# ---- Our own settings -------------------------------------------------------
+# Not logged in -> redirect to the page named "login" (postgresql/urls.py)
 LOGIN_URL = 'login'
 
-# Maximum session duration in seconds (14 days). Used when "Remember Me" checkbox is checked.
+# "Remember me" keeps the login for 14 days (set in postgresql/views.py)
 SESSION_COOKIE_AGE = 60 * 60 * 24 * 14
 
-# Custom Application Name displayed in the login page title, sidebar header, and footer.
+# Name shown on the login page and sidebar
 APP_NAME = 'JW Africa'
-

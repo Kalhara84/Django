@@ -1,32 +1,19 @@
 # =============================================================================
-# postgresql/migrations/0004_seed_expire_data.py  -  Database Migration: Expire Seed Data
+# migrations/0004_seed_expire_data.py - dummy data for the Expire Module combo boxes
 # =============================================================================
-# This migration populates the Expire lookup tables with initial master data:
-#
-#   1. Excmast   - Categories (MED, VAC, FEED, PKG, CHM)
-#   2. Exlocmast - Locations (MAIN, FARM1, FARM2, HATCH, COLD)
-#   3. Exsmast   - Services/Actions (INSP, REORD, DISP, RETN, QC)
-#   4. Expmast   - Expiry reminder periods (1 WEEK, 2 WEEKS, 1 MONTH, etc.)
-#   5. GGenmast  - Stock and write-off accounts (1100-001, 1100-002, 5100-001, etc.)
-#
-# Related Files:
-#   - postgresql/models.py       : Defines model schemas for the tables populated here.
-#   - postgresql/expire_forms.py : lookup_choices() reads these rows to build UI dropdowns.
+# Fills: excmast, exlocmast, exsmast, expmast, g_genmast.
+# Replace or delete these rows when real data is available.
 # =============================================================================
-
 import datetime
 from django.db import migrations
 
-# Fixed reference date & time for audit stamps on seeded records
+# Date and time written in the "created" columns of the dummy rows
 NOW_D = datetime.date.today()
 NOW_T = datetime.time(9, 0, 0)
 
 
+# Created-by / date / time columns for a table. prefix = exc, exloc, exs, exp or gen.
 def audit(prefix):
-    """
-    Helper function generating creation audit fields for the specified table prefix.
-    Example: prefix='exc' -> {'excucdnew': 'ADMIN', 'excentddt': ..., 'excenttime': ...}
-    """
     return {
         f"{prefix}ucdnew": "ADMIN",
         f"{prefix}entddt": NOW_D,
@@ -34,19 +21,16 @@ def audit(prefix):
     }
 
 
+# Inserts dummy data into the combo box tables (skips rows that already exist).
 def seed(apps, schema_editor):
-    """
-    Inserts initial lookup records for Categories, Locations, Services, Periods,
-    and GL Accounts using get_or_create to prevent duplicate keys if re-run.
-    """
-    # Load historical models from migration context
+
     Excmast = apps.get_model("postgresql", "Excmast")
     Exlocmast = apps.get_model("postgresql", "Exlocmast")
     Exsmast = apps.get_model("postgresql", "Exsmast")
     Expmast = apps.get_model("postgresql", "Expmast")
     GGenmast = apps.get_model("postgresql", "GGenmast")
 
-    # 1. Seed Categories (excmast)
+    # Item categories (excmast)
     for code, name in [
         ("MED", "Medicine"),
         ("VAC", "Vaccines"),
@@ -56,7 +40,7 @@ def seed(apps, schema_editor):
     ]:
         Excmast.objects.get_or_create(excexc=code, defaults=dict(excnam=name, **audit("exc")))
 
-    # 2. Seed Locations / Warehouses (exlocmast)
+    # Locations (exlocmast)
     for code, name in [
         ("MAIN", "Main Store"),
         ("FARM1", "Farm 1 Store"),
@@ -66,7 +50,7 @@ def seed(apps, schema_editor):
     ]:
         Exlocmast.objects.get_or_create(exlocloc=code, defaults=dict(exlocnam=name, **audit("exloc")))
 
-    # 3. Seed Service / Action Types (exsmast)
+    # Service categories (exsmast)
     for code, name in [
         ("INSP", "Inspection"),
         ("REORD", "Re-order"),
@@ -76,7 +60,7 @@ def seed(apps, schema_editor):
     ]:
         Exsmast.objects.get_or_create(exsexs=code, defaults=dict(exsnam=name, **audit("exs")))
 
-    # 4. Seed Expiry Periods and durations in days (expmast)
+    # Periods (expmast): name and number of days
     for code, days in [
         ("1 WEEK", 7),
         ("2 WEEKS", 14),
@@ -87,7 +71,7 @@ def seed(apps, schema_editor):
     ]:
         Expmast.objects.get_or_create(expexp=code, defaults=dict(expdays=days, **audit("exp")))
 
-    # 5. Seed General Ledger Accounts (g_genmast)
+    # Accounts (g_genmast): control code, sub code, description
     for ctl, sub, des in [
         ("1100", "001", "Medicine Stock"),
         ("1100", "002", "Vaccine Stock"),
@@ -111,8 +95,7 @@ def seed(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-    # Depends on migration 0003 where tables were created
+
     dependencies = [("postgresql", "0003_expire_tables")]
 
-    # Forward migration calls seed(); backward does nothing (noop)
     operations = [migrations.RunPython(seed, migrations.RunPython.noop)]

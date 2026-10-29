@@ -1,53 +1,30 @@
-﻿<!-- EXPIRE/LIST.HTML — Expire module list page.
-     Extends base.html to inherit sidebar, topbar, flash messages, and footer.
-     The `rows` context variable is a queryset of expire header records,
-     annotated with `line_count`, `cat_name`, and `loc_name` by the view.
-     The `usd` variable is the currently logged-in user. -->
+{# expire/list.html - Expire Module list page (views.expire_list). Extends base.html. #}
 {% extends "postgresql/base.html" %}
 {% load static %}
 {% block title %}Expire Module{% endblock %}
 {% block page_title %}Expire Module{% endblock %}
-<!-- [tag: block head] injects expire-specific styles into the base.html <head> -->
+{# expire.css = styles of this module only #}
 {% block head %}<link rel="stylesheet" href="{% static 'assesst/css/expire.css' %}">{% endblock %}
 
 {% block content %}
 <div class="jw-card exp-list">
   <div class="jw-card-head">
-    <!-- Card heading — [var: rows|length] shows total expire entry count -->
     <h5><i class="bi bi-hourglass-split"></i> Expire entries <span class="text-muted small">({{ rows|length }})</span></h5>
     <div class="d-flex gap-2">
-      <!-- LIVE SEARCH INPUT
-           Filters table rows client-side via the JavaScript in [tag: block scripts].
-           id="expSearch" is the hook used by the search listener. -->
+      {# Search box (script at the bottom) and the Add Entry button -> expire_add #}
       <input type="search" id="expSearch" class="form-control form-control-sm" placeholder="Search..." style="width:200px">
-      <!-- Link to the Add Expire Entry form page -->
       <a href="{% url 'expire_add' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Add Entry</a>
     </div>
   </div>
   <div class="jw-card-body">
     <div class="table-responsive">
-      <!-- id="expTable" is the hook used by the live-search JavaScript -->
+      {# Table sent by views.expire_list. cat_name, loc_name and line_count are added there. #}
       <table class="table jw-table align-middle" id="expTable">
         <thead>
           <tr><th>#</th><th>Code</th><th>Date</th><th>Description</th><th>Item Category</th><th>Location</th>
               <th class="text-center">Lines</th><th>Updated by</th><th>Updated on</th><th class="text-end">Actions</th></tr>
         </thead>
         <tbody>
-        <!-- EXPIRE ENTRIES LOOP
-             [tag: for h in rows] iterates over every expire header record.
-             Field reference:
-               h.exhsno      : serial / row number
-               h.exhdno      : document / entry code
-               h.exhddt      : entry date
-               h.exhdes      : description text
-               h.cat_name    : item category name (annotated by the view)
-               h.loc_name    : location name (annotated by the view)
-               h.line_count  : number of detail lines (annotated by the view)
-               h.exhucdame   : login code of the user who last amended this record
-               h.exhucdnew   : login code of the user who created this record
-               h.exhameddt / h.exhametime : last amendment date/time
-               h.exhentddt / h.exhenttime : entry creation date/time
-             [tag: empty] is rendered when the queryset is empty. -->
         {% for h in rows %}
           <tr>
             <td>{{ h.exhsno }}</td>
@@ -56,18 +33,13 @@
             <td>{{ h.exhdes }}</td>
             <td>{{ h.cat_name }}</td>
             <td>{{ h.loc_name }}</td>
-            <!-- Line count badge — shows how many detail rows belong to this header -->
             <td class="text-center"><span class="badge text-bg-secondary">{{ h.line_count }}</span></td>
-            <!-- Last updated by — falls back to creator code, then "-" if neither exists -->
             <td>{{ h.exhucdame|default:h.exhucdnew|default:"-" }}</td>
-            <!-- Updated on — shows amendment date/time if amended, otherwise entry date/time -->
+            {# Shows the last update, or the created date when never updated #}
             <td>{% if h.exhameddt %}{{ h.exhameddt|date:"Y-m-d" }} {{ h.exhametime|time:"H:i:s" }}{% else %}{{ h.exhentddt|date:"Y-m-d" }} {{ h.exhenttime|time:"H:i:s" }}{% endif %}</td>
             <td class="text-end text-nowrap">
-              <!-- Edit button — opens the expire entry edit form for this record's primary key -->
+              {# Edit -> expire_edit,  Delete -> opens the pop-up below #}
               <a href="{% url 'expire_edit' h.pk %}" class="btn btn-outline-gold btn-sm"><i class="bi bi-pencil"></i></a>
-              <!-- DELETE BUTTON — triggers the delete confirmation modal via JS.
-                   data-url holds the delete view URL; data-name holds the doc code
-                   so the modal body can show which entry is being deleted. -->
               <button type="button" class="btn btn-outline-danger btn-sm js-del" data-url="{% url 'expire_delete' h.pk %}" data-name="{{ h.exhdno }}"><i class="bi bi-trash"></i></button>
             </td>
           </tr>
@@ -80,18 +52,12 @@
   </div>
 </div>
 
-<!-- DELETE CONFIRMATION MODAL
-     Bootstrap 5 modal that confirms deletion of an expire entry AND all
-     its associated detail lines (the warning text says "and all its lines").
-     The form's action URL and displayed entry code are set dynamically
-     by the JS below before the modal is shown. -->
+{# Delete confirm pop-up (deletes the entry and its lines -> expire_delete) #}
 <div class="modal fade" id="delModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <form method="post" id="delForm" class="modal-content">
-      <!-- CSRF TOKEN — required for every POST form -->
       {% csrf_token %}
       <div class="modal-header"><h5 class="modal-title">Delete entry</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-      <!-- id="delName" is populated by JS with the expire entry document code -->
       <div class="modal-body">Delete expire entry <b id="delName"></b> and all its lines? This cannot be undone.</div>
       <div class="modal-footer">
         <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
@@ -102,24 +68,16 @@
 </div>
 {% endblock %}
 
-<!-- SCRIPTS BLOCK — page-specific JavaScript appended after Bootstrap JS -->
 {% block scripts %}
 <script>
-/* LIVE SEARCH
-   Filters expire table rows in real time as the user types.
-   Compares the entire row text (all columns) against the search query. */
+// Search: hide the rows that do not contain the typed text
 document.getElementById('expSearch').addEventListener('input', function () {
   var q = this.value.toLowerCase();
   document.querySelectorAll('#expTable tbody tr').forEach(function (tr) {
     tr.style.display = tr.textContent.toLowerCase().indexOf(q) > -1 ? '' : 'none';
   });
 });
-/* DELETE MODAL WIRING
-   Each trash (.js-del) button stores its target URL and entry code
-   in data attributes. On click:
-     1. The modal form's action is updated to the delete view URL.
-     2. The entry code is shown in the modal body for user confirmation.
-     3. The Bootstrap modal is displayed. */
+// Delete button: put the entry's delete address in the pop-up form and open it
 var modal = new bootstrap.Modal(document.getElementById('delModal'));
 document.querySelectorAll('.js-del').forEach(function (b) {
   b.addEventListener('click', function () {

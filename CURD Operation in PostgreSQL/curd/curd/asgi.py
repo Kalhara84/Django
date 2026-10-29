@@ -1,22 +1,15 @@
-﻿# =============================================================================
-# asgi.py  -  ASGI (Asynchronous Server Gateway Interface) configuration
 # =============================================================================
-# ASGI is a newer, async-capable way to serve Django.
-# Used by servers like Daphne or Uvicorn instead of the older WSGI (wsgi.py).
-#
-# Django reads this file when you deploy with an ASGI server.
-# For normal development (python manage.py runserver) you do not need to
-# worry about this file.
+# curd/asgi.py - entry point for ASGI servers (Daphne, Uvicorn)
 # =============================================================================
-
+# Not used by "python manage.py runserver". Only needed when deploying.
+# Works like wsgi.py and reads curd/settings.py.
+# =============================================================================
 import os
 
-# get_asgi_application creates the ASGI callable that the server talks to.
 from django.core.asgi import get_asgi_application
 
-# Point Django to the settings file (curd/settings.py).
+# Use curd/settings.py
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'curd.settings')
 
-# 'application' is the object the ASGI server (e.g. Daphne) will call for
-# every incoming request.
+# The server calls this object for every request
 application = get_asgi_application()

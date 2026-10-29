@@ -1,85 +1,66 @@
 # =============================================================================
-# postgresql/migrations/0003_expire_tables.py  -  Database Migration: Expire Module Tables
+# migrations/0003_expire_tables.py - creates the Expire Module tables
 # =============================================================================
-# This migration creates all the tables required by the Expire module:
-#
-#   1. Exhmast   (exhmast)    - Header table (Master record: doc no, category, location, date, desc)
-#   2. Excmast   (excmast)    - Expire Category lookup table (e.g. Medicine, Vaccines, Feed)
-#   3. Exlmast   (exlmast)    - Detail Lines table (Child items linked by exlexhsno to Exhmast)
-#   4. Exlocmast (exlocmast)  - Location lookup table (e.g. Main Store, Cold Room)
-#   5. Expmast   (expmast)    - Period lookup table (e.g. 1 WEEK, 1 MONTH)
-#   6. Exsmast   (exsmast)    - Service/Action lookup table (e.g. Inspection, Disposal)
-#   7. GGenmast  (g_genmast)  - General Ledger Account lookup table (Control + Sub accounts)
-#
-# Related Files:
-#   - postgresql/models.py       : Defines Python model classes for each of these tables.
-#   - postgresql/expire_forms.py : Forms (HeaderForm, LineForm) mapped to these tables.
-#   - postgresql/expire_views.py : Views (expire_list, expire_add, expire_edit, expire_delete).
+# exhmast, exlmast, excmast, exlocmast, exsmast, expmast, g_genmast (see models.py).
+# Made by "python manage.py makemigrations". Do not edit by hand.
 # =============================================================================
-
 from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
 
-    # Depends on migration 0002 (which seeded the initial user accounts)
     dependencies = [
         ('postgresql', '0002_seed_users'),
     ]
 
     operations = [
-        # ---------------------------------------------------------------------
-        # 1. EXHMAST - Expire Header Master Table
-        # ---------------------------------------------------------------------
+
         migrations.CreateModel(
             name='Exhmast',
             fields=[
-                # Primary key ID for each expire header document
+
                 ('exhsno', models.AutoField(primary_key=True, serialize=False)),
                 
-                # Document number (e.g. EXP-20261028-0001), must be unique
+
                 ('exhdno', models.CharField(max_length=30, unique=True)),
                 
-                # Foreign key references to category and location lookup tables
-                ('exhexcsno', models.IntegerField()),    # Category ID (references excmast.excsno)
-                ('exhexlocsno', models.IntegerField()), # Location ID (references exlocmast.exlocsno)
+
+                ('exhexcsno', models.IntegerField()),
+                ('exhexlocsno', models.IntegerField()),
                 
-                # Transaction date and description
-                ('exhddt', models.DateField()),          # Expire document date
-                ('exhdes', models.CharField(max_length=50)), # Brief description / remarks
+
+                ('exhddt', models.DateField()),
+                ('exhdes', models.CharField(max_length=50)),
                 
-                # Audit trail fields: Created by, date, and time
+
                 ('exhucdnew', models.CharField(blank=True, max_length=30, null=True)),
                 ('exhentddt', models.DateField(blank=True, null=True)),
                 ('exhenttime', models.TimeField(blank=True, null=True)),
                 
-                # Audit trail fields: Last amended by, date, and time
+
                 ('exhucdame', models.CharField(blank=True, max_length=30, null=True)),
                 ('exhameddt', models.DateField(blank=True, null=True)),
                 ('exhametime', models.TimeField(blank=True, null=True)),
             ],
             options={
-                'db_table': 'exhmast',          # PostgreSQL table name
-                'ordering': ['-exhsno'],        # Latest documents appear first
+                'db_table': 'exhmast',
+                'ordering': ['-exhsno'],
             },
         ),
 
-        # ---------------------------------------------------------------------
-        # 2. EXCMAST - Expire Category Lookup Table
-        # ---------------------------------------------------------------------
         migrations.CreateModel(
             name='Excmast',
             fields=[
-                ('excsno', models.AutoField(primary_key=True, serialize=False)), # Primary key
-                ('excexc', models.CharField(default='', max_length=40)),         # Category short code
-                ('excnam', models.CharField(default='', max_length=40)),         # Category display name
-                ('excusdsno', models.IntegerField(blank=True, null=True)),       # User assignment ID
-                ('excucdnew', models.CharField(blank=True, max_length=30, null=True)), # Creator code
-                ('excentddt', models.DateField(blank=True, null=True)),          # Creation date
-                ('excenttime', models.TimeField(blank=True, null=True)),         # Creation time
-                ('excucdame', models.CharField(blank=True, max_length=30, null=True)), # Amend user
-                ('excameddt', models.DateField(blank=True, null=True)),          # Amend date
-                ('excametime', models.TimeField(blank=True, null=True)),         # Amend time
+                ('excsno', models.AutoField(primary_key=True, serialize=False)),
+                ('excexc', models.CharField(default='', max_length=40)),
+                ('excnam', models.CharField(default='', max_length=40)),
+                ('excusdsno', models.IntegerField(blank=True, null=True)),
+                ('excucdnew', models.CharField(blank=True, max_length=30, null=True)),
+                ('excentddt', models.DateField(blank=True, null=True)),
+                ('excenttime', models.TimeField(blank=True, null=True)),
+                ('excucdame', models.CharField(blank=True, max_length=30, null=True)),
+                ('excameddt', models.DateField(blank=True, null=True)),
+                ('excametime', models.TimeField(blank=True, null=True)),
             ],
             options={
                 'db_table': 'excmast',
@@ -90,58 +71,52 @@ class Migration(migrations.Migration):
             },
         ),
 
-        # ---------------------------------------------------------------------
-        # 3. EXLMAST - Expire Detail Lines Table (Child of Exhmast)
-        # ---------------------------------------------------------------------
         migrations.CreateModel(
             name='Exlmast',
             fields=[
-                # Primary key ID for each line item
+
                 ('exlsno', models.AutoField(primary_key=True, serialize=False)),
                 
-                # Parent relationship: foreign key pointing to Exhmast.exhsno
+
                 ('exlexhsno', models.IntegerField(default=0)),
                 
-                # Line sequence number within the header (1, 2, 3...)
+
                 ('exllno', models.IntegerField(default=0)),
                 
-                # Foreign key references to lookup tables
-                ('exlexssno', models.IntegerField()),   # Service Type (references exsmast.exssno)
-                ('exlexpsno', models.IntegerField()),   # Period Type (references expmast.expsno)
-                ('exlgensno', models.IntegerField()),   # General Account (references g_genmast.gensno)
+
+                ('exlexssno', models.IntegerField()),
+                ('exlexpsno', models.IntegerField()),
+                ('exlgensno', models.IntegerField()),
                 
-                # Line target dates
-                ('exlcomplddt', models.DateField(blank=True, null=True)),  # Target completion date
-                ('exlcutoffddt', models.DateField(blank=True, null=True)), # Cutoff / expiry deadline
+
+                ('exlcomplddt', models.DateField(blank=True, null=True)),
+                ('exlcutoffddt', models.DateField(blank=True, null=True)),
                 
-                # Audit trail tracking:
+
                 ('exlucdnew', models.CharField(blank=True, max_length=30, null=True)),
                 ('exlentddt', models.DateField(blank=True, null=True)),
                 ('exlenttime', models.TimeField(blank=True, null=True)),
                 ('exlucdame', models.CharField(blank=True, max_length=30, null=True)),
                 ('exlameddt', models.DateField(blank=True, null=True)),
                 ('exlametime', models.TimeField(blank=True, null=True)),
-                ('exldelflg', models.CharField(blank=True, default='', max_length=1)), # Soft-delete flag
+                ('exldelflg', models.CharField(blank=True, default='', max_length=1)),
             ],
             options={
                 'db_table': 'exlmast',
                 'ordering': ['exlexhsno', 'exllno'],
                 'constraints': [
-                    # Composite unique constraint: ensures unique line numbers per header document
+
                     models.UniqueConstraint(fields=('exlexhsno', 'exllno'), name='exlmast_exlexhsno_exllno_uniq')
                 ],
             },
         ),
 
-        # ---------------------------------------------------------------------
-        # 4. EXLOCMAST - Expire Location Lookup Table
-        # ---------------------------------------------------------------------
         migrations.CreateModel(
             name='Exlocmast',
             fields=[
-                ('exlocsno', models.AutoField(primary_key=True, serialize=False)), # Primary key
-                ('exlocloc', models.CharField(default='', max_length=40)),         # Location code
-                ('exlocnam', models.CharField(default='', max_length=40)),         # Location display name
+                ('exlocsno', models.AutoField(primary_key=True, serialize=False)),
+                ('exlocloc', models.CharField(default='', max_length=40)),
+                ('exlocnam', models.CharField(default='', max_length=40)),
                 ('exlocucdnew', models.CharField(blank=True, max_length=30, null=True)),
                 ('exlocentddt', models.DateField(blank=True, null=True)),
                 ('exlocenttime', models.TimeField(blank=True, null=True)),
@@ -158,15 +133,12 @@ class Migration(migrations.Migration):
             },
         ),
 
-        # ---------------------------------------------------------------------
-        # 5. EXPMAST - Expire Period Lookup Table
-        # ---------------------------------------------------------------------
         migrations.CreateModel(
             name='Expmast',
             fields=[
-                ('expsno', models.AutoField(primary_key=True, serialize=False)), # Primary key
-                ('expexp', models.CharField(default='', max_length=40)),         # Period label (e.g. 1 MONTH)
-                ('expdays', models.IntegerField(blank=True, null=True)),          # Number of calendar days
+                ('expsno', models.AutoField(primary_key=True, serialize=False)),
+                ('expexp', models.CharField(default='', max_length=40)),
+                ('expdays', models.IntegerField(blank=True, null=True)),
                 ('expucdnew', models.CharField(blank=True, max_length=30, null=True)),
                 ('expentddt', models.DateField(blank=True, null=True)),
                 ('expenttime', models.TimeField(blank=True, null=True)),
@@ -183,15 +155,12 @@ class Migration(migrations.Migration):
             },
         ),
 
-        # ---------------------------------------------------------------------
-        # 6. EXSMAST - Expire Service / Action Lookup Table
-        # ---------------------------------------------------------------------
         migrations.CreateModel(
             name='Exsmast',
             fields=[
-                ('exssno', models.AutoField(primary_key=True, serialize=False)), # Primary key
-                ('exsexs', models.CharField(default='', max_length=40)),         # Service code (e.g. INSP)
-                ('exsnam', models.CharField(default='', max_length=40)),         # Service name (e.g. Inspection)
+                ('exssno', models.AutoField(primary_key=True, serialize=False)),
+                ('exsexs', models.CharField(default='', max_length=40)),
+                ('exsnam', models.CharField(default='', max_length=40)),
                 ('exsucdnew', models.CharField(blank=True, max_length=30, null=True)),
                 ('exsentddt', models.DateField(blank=True, null=True)),
                 ('exsenttime', models.TimeField(blank=True, null=True)),
@@ -208,20 +177,17 @@ class Migration(migrations.Migration):
             },
         ),
 
-        # ---------------------------------------------------------------------
-        # 7. GGENMAST - General Ledger Accounts Table
-        # ---------------------------------------------------------------------
         migrations.CreateModel(
             name='GGenmast',
             fields=[
-                ('gensno', models.AutoField(primary_key=True, serialize=False)), # Primary key
-                ('genctl', models.CharField(max_length=8)),                      # Control account code
-                ('gensub', models.CharField(blank=True, default='', max_length=4)),# Sub-account code
-                ('genctlsub', models.CharField(blank=True, default='', max_length=8)), # Combined control + sub code
+                ('gensno', models.AutoField(primary_key=True, serialize=False)),
+                ('genctl', models.CharField(max_length=8)),
+                ('gensub', models.CharField(blank=True, default='', max_length=4)),
+                ('genctlsub', models.CharField(blank=True, default='', max_length=8)),
                 ('gendebint', models.CharField(blank=True, default='', max_length=1)),
                 ('gencrdint', models.CharField(blank=True, default='', max_length=1)),
-                ('gendes', models.CharField(blank=True, max_length=60, null=True)),   # Account description
-                ('gendes1', models.CharField(blank=True, default='', max_length=30)), # Short description
+                ('gendes', models.CharField(blank=True, max_length=60, null=True)),
+                ('gendes1', models.CharField(blank=True, default='', max_length=30)),
                 ('genmapcode', models.CharField(blank=True, max_length=15, null=True)),
                 ('gencde', models.CharField(blank=True, max_length=1, null=True)),
                 ('gencomsno', models.IntegerField(default=0)),

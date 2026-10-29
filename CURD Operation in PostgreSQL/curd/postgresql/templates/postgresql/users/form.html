@@ -1,63 +1,35 @@
-﻿<!-- USERS/FORM.HTML — Add / Edit user form page.
-     Extends base.html to inherit the full page chrome.
-     Context variables supplied by the view:
-       form  : a UserForm instance (forms.py) — either blank (add) or
-               pre-populated with an existing user's data (edit).
-       obj   : the existing user model instance when editing, or None when adding.
-               Used to conditionally show "Edit user · <code>" in the title
-               and to display the "last updated by" audit line.
-     The form renders itself in sections via a custom sections() method
-     defined in UserForm (forms.py). -->
+{# users/form.html - Add / Edit user page. Extends base.html. Fields come from forms.UserForm. #}
 {% extends "postgresql/base.html" %}
-<!-- Dynamic title: "Edit user" or "Add user" depending on whether obj exists -->
 {% block title %}{% if obj %}Edit user{% else %}Add user{% endif %}{% endblock %}
-<!-- Dynamic topbar heading with the username when editing -->
 {% block page_title %}{% if obj %}Edit user &middot; {{ obj.usdusd }}{% else %}Add user{% endif %}{% endblock %}
 {% block content %}
-<!-- POST form — novalidate disables native browser validation so that
-     Django's server-side validation errors are always shown cleanly. -->
+{# The form comes from forms.UserForm (views.user_add / user_edit) #}
 <form method="post" novalidate>
-  <!-- CSRF TOKEN — mandatory on every POST form -->
+  {# Security token #}
   {% csrf_token %}
-  <!-- Non-field errors (e.g. form-level validation failures not tied
-       to a specific field) are shown here as a red alert banner. -->
+  {# Errors that belong to the whole form #}
   {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
 
-  <!-- FORM SECTIONS LOOP
-       form.sections is a custom method on UserForm (forms.py) that returns
-       a list of tuples: (title, fields, is_check).
-         title    : section heading string (e.g. "Account", "Permissions")
-         fields   : list of BoundField objects belonging to this section
-         is_check : True if this section contains checkbox/toggle fields;
-                    False if it contains standard text/select inputs.
-       Each section is rendered as its own card with a heading. -->
+  {# One card for each group of fields (UserForm.sections in forms.py) #}
   {% for title, fields, is_check in form.sections %}
   <div class="jw-card mb-3">
     <div class="jw-card-head"><h5>{{ title }}</h5></div>
     <div class="jw-card-body">
       <div class="row g-3">
-        <!-- Inner loop over the fields in this section -->
         {% for f in fields %}
-          <!-- CHECKBOX / TOGGLE RENDERING (is_check == True)
-               Checkbox fields use Bootstrap's form-check / form-switch layout:
-               the widget renders first ([var: f]), then its <label> follows.
-               A smaller column width is used because toggles are compact. -->
+          {# Check box groups are shown as switches, other groups as normal inputs #}
           {% if is_check %}
           <div class="col-6 col-md-4 col-xl-3">
             <div class="form-check form-switch">
               {{ f }} <label class="form-check-label" for="{{ f.id_for_label }}">{{ f.label }}</label>
             </div>
           </div>
-          <!-- TEXT / SELECT / DATE RENDERING (is_check == False)
-               Standard inputs show label above, widget below, with optional
-               help text and inline validation error messages. -->
           {% else %}
           <div class="col-md-6 col-xl-4">
             <label class="form-label fw-semibold" for="{{ f.id_for_label }}">{{ f.label }}</label>
             {{ f }}
-            <!-- Help text — shown as a small muted note below the input -->
             {% if f.help_text %}<div class="form-text">{{ f.help_text }}</div>{% endif %}
-            <!-- Field-level validation errors — shown in red below the input -->
+            {# Error text under the field #}
             {% for e in f.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
           </div>
           {% endif %}
@@ -67,15 +39,12 @@
   </div>
   {% endfor %}
 
-  <!-- AUDIT INFO — only shown when editing an existing user that has been
-       previously modified (obj.usducdame holds the editor's login code). -->
+  {# Edit page: who updated this user last and when #}
   {% if obj and obj.usducdame %}
   <p class="text-muted small">Last updated by <b>{{ obj.usducdame }}</b> on {{ obj.usdameddt|date:"Y-m-d" }} {{ obj.usdametime|time:"H:i:s" }}</p>
   {% endif %}
 
-  <!-- FORM ACTION BUTTONS
-       Save   : submits the form via POST to the same URL (create or update).
-       Cancel : navigates back to the users list without saving any changes. -->
+  {# Save and Cancel buttons #}
   <div class="d-flex gap-2">
     <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Save</button>
     <a href="{% url 'user_list' %}" class="btn btn-light">Cancel</a>

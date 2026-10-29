@@ -1,82 +1,42 @@
-﻿# =============================================================================
-# postgresql/expire_forms.py  -  Forms for the Expire module
 # =============================================================================
-# This file defines the forms used to create and edit expire entries.
-#
-# An expire entry has two levels:
-#   HEADER (one row in exhmast)  ->  HeaderForm
-#   LINES  (many rows in exlmast) ->  LineForm / LineFormSet
-#
-# The template renders one HeaderForm and then a formset of LineForms side by
-# side so the user can add/edit the header and all its lines on one page.
-#
-# Key helpers in this file:
-#   lookup_choices()  - loads all dropdown options from the lookup tables once
-#                       and returns them as a dict so both HeaderForm and
-#                       LineForm can share the same data without extra DB hits.
-#   BSBoundField      - extends Django's BoundField to automatically add
-#                       Bootstrap 'is-invalid' CSS class when a field has errors.
-#   BSFormMixin       - mix into any form to activate BSBoundField.
-#   _combo()          - shortcut to build a styled dropdown (TypedChoiceField).
-#   _date()           - shortcut to build a styled date picker (DateField).
-#   HeaderForm        - ModelForm for the exhmast header row.
-#   LineForm          - plain Form for one exlmast line row.
-#   LineFormSet       - a set of LineForms (created via formset_factory).
-#
-# Connections:
-#   - models.py       -> Excmast, Exlocmast, Exsmast, Expmast, GGenmast
-#                        (lookup tables for dropdowns)
-#                        Exhmast (the header model HeaderForm wraps)
-#   - expire_views.py -> uses HeaderForm, LineFormSet, lookup_choices()
+# postgresql/expire_forms.py - forms of the Expire Module
 # =============================================================================
+# Used by:  expire_views.py
+# Uses:     models.py (Exhmast, Exlmast and the combo tables)
+# Shown in: templates/postgresql/expire/form.html (+ _field.html, _row.html)
+#
+#   HeaderForm  -> top part of the page  -> saved to exhmast
+#   LineForm    -> one table row         -> saved to exlmast
+#   LineFormSet -> all rows (+ / - buttons add and remove rows)
+#   LocationForm-> "Add Location" pop-up -> saved to exlocmast
+# =============================================================================
+from django import forms
+from django.forms import BoundField, formset_factory
+from django.utils import timezone
 
-from django import forms                                # Django form base classes
-from django.forms import BoundField, formset_factory    # BoundField for custom rendering;
-                                                        # formset_factory creates LineFormSet
-from django.utils import timezone                       # timezone-aware date/time
-
-# Lookup-table models (for populating dropdowns) and header model.
 from .models import Excmast, Exhmast, Exlocmast, Expmast, Exsmast, GGenmast
 
-# Placeholder option that appears at the top of every dropdown.
+# First item of every combo box
 SELECT = [("", "-- Select --")]
 
 
-# ---------------------------------------------------------------------------
-# lookup_choices()  -  load all dropdown options in one go
-# ---------------------------------------------------------------------------
 def lookup_choices():
-    """
-    Query all lookup tables and return their data as choice lists.
-
-    Returns a dict:
-        {
-          "cat":  [(excsno,  "code - name"), ...],   # item categories (Excmast)
-          "loc":  [(exlocsno,"code - name"), ...],   # locations (Exlocmast)
-          "svc":  [(exssno,  "code - name"), ...],   # service categories (Exsmast)
-          "per":  [(expsno,  "code (N days)"), ...], # periods (Expmast)
-          "acc":  [(gensno,  "ctl-sub desc"), ...],  # account codes (GGenmast)
-        }
-
-    Called by expire_views.py -> _expire_form() once per request.
-    Both HeaderForm and all LineForms receive this dict so the DB is only
-    queried once, not once per form field.
-    """
+    """Load the data of all combo boxes from the database (once per request)."""
     return {
-        # Category dropdown: value = excsno (int), label = "code - name"
+        # Item Category  <- excmast
         "cat": SELECT + [(o.excsno, f"{o.excexc} - {o.excnam}") for o in Excmast.objects.all()],
 
-        # Location dropdown: value = exlocsno (int), label = "code - name"
+        # Location       <- exlocmast
         "loc": SELECT + [(o.exlocsno, f"{o.exlocloc} - {o.exlocnam}") for o in Exlocmast.objects.all()],
 
-        # Service category dropdown: value = exssno (int), label = "code - name"
+        # Service Cat    <- exsmast
         "svc": SELECT + [(o.exssno, f"{o.exsexs} - {o.exsnam}") for o in Exsmast.objects.all()],
 
-        # Period dropdown: value = expsno (int), label = "code (N days)" or just "code"
+        # Period         <- expmast
         "per": SELECT + [(o.expsno, f"{o.expexp} ({o.expdays} days)" if o.expdays is not None else o.expexp)
                          for o in Expmast.objects.all()],
 
-        # Account code dropdown: value = gensno (int), label = "ctl-sub description"
+        # Acc Code       <- g_genmast
         "acc": SELECT + [
             (o.gensno, f"{o.genctl}{'-' + o.gensub if o.gensub else ''}  {o.gendes or ''}".strip())
             for o in GGenmast.objects.all()
@@ -84,127 +44,64 @@ def lookup_choices():
     }
 
 
-# ---------------------------------------------------------------------------
-# BSBoundField  -  Bootstrap-aware field renderer
-# ---------------------------------------------------------------------------
 class BSBoundField(BoundField):
-    """
-    Custom BoundField that adds Bootstrap validation CSS when a field has errors.
-
-    When a field fails validation, Django stores error messages on it.
-    This class intercepts the rendering and appends 'is-invalid' to the widget's
-    CSS class so Bootstrap shows the red border automatically.
-
-    Activated by setting  bound_field_class = BSBoundField  on a form (BSFormMixin).
-    """
+    """Adds the Bootstrap 'is-invalid' class (red border) to a field that has an error."""
 
     def as_widget(self, widget=None, attrs=None, only_initial=False):
-        attrs = dict(attrs or {})   # copy the attrs dict so we do not modify the original
+        attrs = dict(attrs or {})
         if self.errors:
-            # Get whatever CSS class the widget already has.
+            # Keep the normal css class and add is-invalid
             base = attrs.get("class") or self.field.widget.attrs.get("class", "")
-            # Append Bootstrap's 'is-invalid' class to trigger red styling.
             attrs["class"] = f"{base} is-invalid".strip()
-            # Put all error messages into the title attribute for a tooltip.
+            # Error text shows when the mouse is over the field
             attrs["title"] = " ".join(self.errors)
-        # Render the widget with the (possibly updated) attrs.
         return super().as_widget(widget, attrs, only_initial)
 
 
-# ---------------------------------------------------------------------------
-# BSFormMixin  -  mix into a form class to enable BSBoundField
-# ---------------------------------------------------------------------------
 class BSFormMixin:
-    """
-    Mixin that tells Django 5.2+ to use BSBoundField for every field.
-    Add this as the first parent class of any form that needs Bootstrap error styling:
-
-        class MyForm(BSFormMixin, forms.ModelForm):
-            ...
-    """
-    # Django 5.2+ reads this attribute to decide which BoundField subclass to use.
+    # Every form that uses this mixin gets the red-border fields above
     bound_field_class = BSBoundField
 
 
-# ---------------------------------------------------------------------------
-# _combo()  -  helper to build a styled integer dropdown field
-# ---------------------------------------------------------------------------
 def _combo(label, **kw):
-    """
-    Return a TypedChoiceField for an integer foreign-key dropdown.
-
-    - choices=[] is empty here; the form's __init__ fills it from lookup_choices().
-    - coerce=int converts the selected string value to an integer automatically.
-    - empty_value=None means "nothing selected" evaluates to None (not 0 or "").
-    - The widget is a Bootstrap-styled <select> element.
-    """
+    """A required combo box. The chosen id is converted to a number."""
     return forms.TypedChoiceField(
         label=label, choices=[], coerce=int, empty_value=None,
         error_messages={"required": f"{label} is required", "invalid_choice": f"Select a valid {label}"},
         widget=forms.Select(attrs={"class": "form-select"}), **kw)
 
 
-# ---------------------------------------------------------------------------
-# _date()  -  helper to build a styled date picker field
-# ---------------------------------------------------------------------------
 def _date(label):
-    """
-    Return a DateField with an HTML5 date picker widget.
-
-    format="%Y-%m-%d"  matches the value browsers send back (ISO 8601).
-    type="date"        tells the browser to show its native date picker UI.
-    """
+    """A required date picker (type="date")."""
     return forms.DateField(
         label=label,
         error_messages={"required": f"{label} is required", "invalid": f"Enter a valid {label}"},
         widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date", "class": "form-control"}))
 
 
-# ---------------------------------------------------------------------------
-# HeaderForm  -  form for one Exhmast (expire header) row
-# ---------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# HEADER (exhmast): code, date, description, item category, location
+# -----------------------------------------------------------------------------
 class HeaderForm(BSFormMixin, forms.ModelForm):
-    """
-    Form to create or edit one expire header (exhmast row).
-
-    Fields:
-      exhdno      - unique document code (text)
-      exhddt      - document date (date picker)
-      exhdes      - description (text)
-      exhexcsno   - item category dropdown (populated from Excmast)
-      exhexlocsno - location dropdown (populated from Exlocmast)
-
-    The choices for the two dropdowns are injected via the 'choices' kwarg
-    in __init__ so they come from a single lookup_choices() call per request.
-
-    Validation:
-      clean_exhdno() ensures the document code is unique (excluding the current
-      row when editing).
-
-    Used by: expire_views.py -> _expire_form()
-    """
-
-    # Override the model's integer fields with our _combo() dropdown helper.
+    # The two combo boxes. Their choices are filled in __init__.
     exhexcsno = _combo("Item Category")
     exhexlocsno = _combo("Location")
 
     class Meta:
-        model = Exhmast   # this form saves/updates rows in the exhmast table
-
-        # Which model fields to include in the form.
+        model = Exhmast
         fields = ["exhdno", "exhddt", "exhdes", "exhexcsno", "exhexlocsno"]
 
-        # Human-readable labels for the text fields.
+        # Label shown above each field
         labels = {"exhdno": "Code", "exhddt": "Date", "exhdes": "Description"}
 
-        # Custom widgets with Bootstrap styling and HTML5 attributes.
+        # Input types and css classes
         widgets = {
             "exhdno": forms.TextInput(attrs={"class": "form-control", "maxlength": 30, "autocomplete": "off"}),
             "exhddt": forms.DateInput(format="%Y-%m-%d", attrs={"type": "date", "class": "form-control"}),
             "exhdes": forms.TextInput(attrs={"class": "form-control", "maxlength": 50, "autocomplete": "off"}),
         }
 
-        # Custom error messages for each field.
+        # Messages shown when a field is empty or wrong
         error_messages = {
             "exhdno": {"required": "Code is required"},
             "exhddt": {"required": "Date is required", "invalid": "Enter a valid Date"},
@@ -212,34 +109,23 @@ class HeaderForm(BSFormMixin, forms.ModelForm):
         }
 
     def __init__(self, *args, choices, **kwargs):
-        """
-        choices  - dict returned by lookup_choices() (injected from expire_views.py).
-                   We pull "cat" and "loc" from it to populate the two dropdowns.
-
-        If this is a new header (no instance pk), pre-fill the date to today.
-        """
         super().__init__(*args, **kwargs)
 
-        # Inject choice lists into the two dropdown fields.
-        self.fields["exhexcsno"].choices = choices["cat"]    # item categories
-        self.fields["exhexlocsno"].choices = choices["loc"]  # locations
+        # Fill the combo boxes (data comes from lookup_choices)
+        self.fields["exhexcsno"].choices = choices["cat"]
+        self.fields["exhexlocsno"].choices = choices["loc"]
 
-        # Default the date field to today when adding a new entry.
+        # New entry: the date starts as today
         if not self.instance.pk:
             self.initial["exhddt"] = timezone.localdate()
 
     def clean_exhdno(self):
-        """
-        Validate that the document code is unique in exhmast.
-
-        When editing an existing header, exclude the current row from the
-        uniqueness check so the user can save without changing the code.
-        """
+        """The code must be unique."""
         code = (self.cleaned_data["exhdno"] or "").strip()
         qs = Exhmast.objects.filter(exhdno=code)
 
+        # When editing, ignore the record itself
         if self.instance.pk:
-            # Exclude the row being edited so it does not conflict with itself.
             qs = qs.exclude(pk=self.instance.pk)
 
         if qs.exists():
@@ -248,66 +134,59 @@ class HeaderForm(BSFormMixin, forms.ModelForm):
         return code
 
 
-# ---------------------------------------------------------------------------
-# LineForm  -  form for one Exlmast (expire line) row
-# ---------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# LINE (exlmast): service cat, period, acc code, complete date, cutoff date
+# -----------------------------------------------------------------------------
 class LineForm(BSFormMixin, forms.Form):
-    """
-    Plain form (not a ModelForm) for one detail line in the expire entry.
-
-    Fields:
-      exlexssno    - service category dropdown  (-> exsmast)
-      exlexpsno    - period dropdown             (-> expmast)
-      exlgensno    - account code dropdown       (-> g_genmast)
-      exlcomplddt  - completion date picker
-      exlcutoffddt - cutoff date picker
-
-    Multiple LineForms are combined into a LineFormSet (see below) so the
-    template can render them as rows in a table.
-
-    The choices dict is injected in __init__ (same pattern as HeaderForm).
-    Also adds '-sm' Bootstrap size variant to all widgets so they look compact
-    in a table row.
-
-    Used by: expire_views.py -> _expire_form() via LineFormSet
-    """
-
-    # Dropdown fields - choices filled in __init__
+    # Combo boxes (choices are filled in __init__)
     exlexssno = _combo("Service Cat")
     exlexpsno = _combo("Period")
     exlgensno = _combo("Acc Code")
 
-    # Date picker fields
+    # Date pickers
     exlcomplddt = _date("Complete Date")
     exlcutoffddt = _date("Cutoff Date")
 
     def __init__(self, *args, choices, **kwargs):
-        """
-        choices - dict from lookup_choices() with keys "svc", "per", "acc".
-        """
         super().__init__(*args, **kwargs)
 
-        # Set the choice lists for the three dropdowns.
+        # Fill the combo boxes
         self.fields["exlexssno"].choices = choices["svc"]
         self.fields["exlexpsno"].choices = choices["per"]
         self.fields["exlgensno"].choices = choices["acc"]
 
-        # Add Bootstrap small-size variant to every widget so lines fit neatly
-        # in a compact table layout.
+        # Small size inputs for the table
         for f in self.fields.values():
-            # Selects get 'form-select-sm'; text/date inputs get 'form-control-sm'.
             f.widget.attrs["class"] += " form-select-sm" if isinstance(f.widget, forms.Select) else " form-control-sm"
 
 
-# ---------------------------------------------------------------------------
-# LineFormSet  -  a formset of LineForms
-# ---------------------------------------------------------------------------
-# formset_factory() creates a class that manages multiple LineForms together.
-#   extra=0        - do not add blank extra forms by default (JS adds them dynamically)
-#   min_num=1      - require at least 1 line (enforced by validate_min=True)
-#   validate_min   - raise an error if fewer than min_num forms are submitted
-#
-# expire_views.py creates an instance:
-#   LineFormSet(request.POST, prefix="lines", form_kwargs={"choices": choices})
-# The form_kwargs dict is passed to each LineForm's __init__ as keyword args.
+# Many LineForms = the table rows.
+#   min_num=1 -> at least one row.  extra=0 -> no extra empty rows.
 LineFormSet = formset_factory(LineForm, extra=0, min_num=1, validate_min=True)
+
+
+# -----------------------------------------------------------------------------
+# NEW LOCATION (exlocmast): the "Add Location" pop-up on the Expire form
+# -----------------------------------------------------------------------------
+class LocationForm(forms.ModelForm):
+    """Checks the Location Code and Name typed in the pop-up. Saved by expire_views.location_add."""
+
+    class Meta:
+        model = Exlocmast
+        fields = ["exlocloc", "exlocnam"]
+        labels = {"exlocloc": "Location Code", "exlocnam": "Location Name"}
+        error_messages = {
+            "exlocloc": {"required": "Location Code is required"},
+            "exlocnam": {"required": "Location Name is required"},
+        }
+
+    def clean_exlocloc(self):
+        """The location code must be unique (capital/small letters are treated the same)."""
+        code = (self.cleaned_data["exlocloc"] or "").strip()
+        if Exlocmast.objects.filter(exlocloc__iexact=code).exists():
+            raise forms.ValidationError("This Location Code already exists")
+        return code
+
+    def clean_exlocnam(self):
+        # Remove spaces around the name
+        return (self.cleaned_data["exlocnam"] or "").strip()

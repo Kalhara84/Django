@@ -1,30 +1,20 @@
 # =============================================================================
-# curd/urls.py  -  Root URL configuration (the main "switchboard")
+# curd/urls.py - main URL list of the project
 # =============================================================================
-# Django reads this file to figure out which view function to call for each
-# incoming URL.  This is the top-level router; it delegates most work to the
-# postgresql app's own urls.py via include().
-#
-# Flow:
-#   Browser sends URL
-#     -> Django checks this file (ROOT_URLCONF = 'curd.urls' in settings.py)
-#     -> Matches a pattern
-#     -> Calls the matching view function
+# Django checks this file first (ROOT_URLCONF in settings.py).
+# Every page URL of our app is in postgresql/urls.py and is added here with include().
 # =============================================================================
-
-from django.contrib import admin       # Django's built-in admin site
-from django.urls import include, path  # helpers to build URL patterns
-from django.views.generic.base import RedirectView  # helper to redirect URLs
+from django.contrib import admin
+from django.urls import include, path
+from django.views.generic.base import RedirectView
 
 urlpatterns = [
-    # Favicon route to prevent 404 in browser console
+    # Browser asks for /favicon.ico -> send it our logo
     path('favicon.ico', RedirectView.as_view(url='/static/assesst/img/jw-logo.svg', permanent=True)),
 
-    # /admin/  ->  Django's built-in admin interface (login, manage DB records)
+    # Django admin site (/admin/)
     path('admin/', admin.site.urls),
 
-    # ''  (empty string = the site root "/")
-    # ->  hand ALL other URLs to postgresql/urls.py for further routing.
-    # include() reads postgresql/urls.py and tries each pattern there.
+    # All other pages (login, dashboard, users, expire) -> postgresql/urls.py
     path('', include('postgresql.urls')),
 ]

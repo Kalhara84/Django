@@ -1,38 +1,24 @@
 # =============================================================================
-# postgresql/migrations/0002_seed_users.py  -  Database Migration: Initial Data
+# migrations/0002_seed_users.py - adds the default users to usdmast
 # =============================================================================
-# This migration populates the 'usdmast' table with initial default users
-# ('2000' and 'ADMIN') upon running initial database migrations.
-#
-# Default Users Created:
-#   1. Username: "2000"  (Password: "2000 rbf") - Full Administrator Account
-#   2. Username: "ADMIN" (Password: "0777289242") - System Administrator Account
-#
-# Related Files:
-#   - postgresql/models.py: Usdmast model representation.
-#   - postgresql/auth.py: Authenticates these seeded users using PBKDF2 hash checking.
-# =============================================================================
-
 import datetime
 
-# Django password hashing utility to store passwords securely using PBKDF2
 from django.contrib.auth.hashers import make_password
 from django.db import migrations
 
 
+# Inserts the 2 default users so you can login after the first migrate.
+# Login:  2000 / '2000 rbf'   and   ADMIN / '0777289242'   (saved as hashes).
 def seed(apps, schema_editor):
-    """
-    Data migration function that inserts default admin users if they do not
-    already exist in the usdmast table.
-    """
-    # Fetch the historical model version matching this migration state
+
     Usdmast = apps.get_model("postgresql", "Usdmast")
 
+    # The two users (same data as the old MySQL table)
     rows = [
-        # User 1: Administrator '2000'
+
         dict(
             usdsno=1, usdusd="2000", usdcomsno=0, usdnam="2000",
-            usdpwd=make_password("2000 rbf"), # Hash password securely before saving
+            usdpwd=make_password("2000 rbf"),
             usddesig="", usddepsno=4, usdlocsno=1, usduno="",
             usdemail="rumeshdezoysa@gmail.com",
             usdadmin="Y", usdactflg="Y", usdbockpodgrnyn="",
@@ -44,10 +30,10 @@ def seed(apps, schema_editor):
             usducdnew="2000", usdentddt=datetime.date(2022, 5, 13), usdenttime="",
             usducdame="2000", usdameddt=datetime.date(2026, 8, 28), usdametime=datetime.time(9, 45, 58),
         ),
-        # User 2: Administrator 'ADMIN'
+
         dict(
             usdsno=2, usdusd="ADMIN", usdcomsno=0, usdnam="ADMIN",
-            usdpwd=make_password("0777289242"), # Hash password securely before saving
+            usdpwd=make_password("0777289242"),
             usddesig="", usddepsno=7, usdlocsno=1, usduno="100",
             usdemail="",
             usdadmin="Y", usdactflg="Y", usdbockpodgrnyn="",
@@ -60,12 +46,11 @@ def seed(apps, schema_editor):
         ),
     ]
 
-    # Create each record if not already present (idempotent seeding)
+    # Insert a user only if the same user code is not there yet (safe to run again)
     for r in rows:
         if not Usdmast.objects.filter(usdusd=r["usdusd"], usdcomsno=r["usdcomsno"]).exists():
             Usdmast.objects.create(**r)
 
-    # In PostgreSQL, explicitly sync the serial sequence to match the highest primary key ID
     if schema_editor.connection.vendor == "postgresql":
         with schema_editor.connection.cursor() as cur:
             cur.execute(
@@ -74,9 +59,10 @@ def seed(apps, schema_editor):
             )
 
 
+
+# Runs after 0001 (the table must exist first)
 class Migration(migrations.Migration):
-    # Depends on initial table creation migration 0001
+
     dependencies = [("postgresql", "0001_initial")]
 
-    # Run the seed function forwards; do nothing on rollback (noop)
     operations = [migrations.RunPython(seed, migrations.RunPython.noop)]

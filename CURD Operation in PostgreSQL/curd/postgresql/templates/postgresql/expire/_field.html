@@ -1,25 +1,5 @@
-﻿<!-- EXPIRE/_FIELD.HTML — Reusable partial template for a single form field.
-     Included by expire/form.html using:
-       [tag: include "postgresql/expire/_field.html" with f=hform.<fieldname>]
-     The `f` variable is a Django BoundField object that provides:
-       f.id_for_label : the HTML id attribute of the rendered widget,
-                        used to associate the <label> with the <input>.
-       f.label        : the human-readable field label string.
-       f.field.required : True if the field is marked required in the form class,
-                          used to append a red asterisk (*) to the label.
-       [var: f]        : renders the widget HTML (<input>, <select>, etc.)
-                        with the current value and any CSS classes set by the form.
-       f.errors.0     : the first validation error message for this field
-                        (shown inside the Bootstrap invalid-feedback div).
-     The invalid-feedback div is always rendered (Bootstrap only shows it
-     when a sibling input has the .is-invalid class, which expire-form.js
-     and/or Django adds on validation failure). -->
-<!-- Label — for attribute links it to the input widget for accessibility -->
+{# _field.html - one header field: label (+ red *), the input, and the error text.  #}
+{# Included from form.html with:  f = a field of HeaderForm. Error text shows only when the field has is-invalid. #}
 <label class="form-label" for="{{ f.id_for_label }}">{{ f.label }}{% if f.field.required %} <span class="text-danger">*</span>{% endif %}</label>
-<!-- Field widget — renders as <input>, <select>, <textarea>, etc. -->
 {{ f }}
-<!-- Validation error message — Bootstrap's invalid-feedback div is displayed
-     when the associated input has the .is-invalid CSS class.
-     Shows the server-side error from Django if present, otherwise a
-     generic "<Label> is required" fallback message. -->
 <div class="invalid-feedback">{% if f.errors %}{{ f.errors.0 }}{% else %}{{ f.label }} is required{% endif %}</div>
