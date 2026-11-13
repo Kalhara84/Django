@@ -1,0 +1,16 @@
+{# _row.html - one table row of the lines (exlmast). Used twice by form.html: #}
+{# 1) for every saved/posted row, 2) inside <template id="lineTemplate"> as the blank row copied by the + button. #}
+{# n = line number, form = a LineForm (expire_forms.py). #}
+<tr class="line-row">
+  <td class="line-no">{{ n }}</td>
+  <td>{{ form.exlexssno }}</td>
+  <td>{{ form.exlexpsno }}</td>
+  <td>{{ form.exlgensno }}</td>
+  <td>{{ form.exlcomplddt }}</td>
+  <td>{{ form.exlcutoffddt }}</td>
+  {# + adds a row below this one, - removes this row (expire-form.js) #}
+  <td class="text-center text-nowrap">
+    <button type="button" class="btn btn-outline-primary btn-add-row" title="Add row">+</button>
+    <button type="button" class="btn btn-outline-danger btn-del-row" title="Remove row">-</button>
+  </td>
+</tr>

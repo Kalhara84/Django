@@ -1,15 +1,80 @@
-# curd  -  Django + PostgreSQL (users CRUD + login + Expire module)
+# CURD Operation in PostgreSQL
 
-1. PostgreSQL eke database ekak hadanna:   CREATE DATABASE curd;
-2. curd/curd/settings.py -> DATABASES eke PASSWORD (saha wenath ewa) edit karanna
-3. cd curd
-   pip install -r ../requirements.txt
-   python manage.py migrate        (tables hadala default users + dummy combo data insert karanawa)
-   python manage.py runserver
-4. http://127.0.0.1:8000/     login:  2000 / "2000 rbf"   or   ADMIN / 0777289242
+This project is a Django web application for managing users and an Expire module using PostgreSQL as the database.
 
-Code thiyenne  curd/postgresql/  app eka athule:
-  models.py (usdmast + expire tables) | auth.py | views.py | forms.py | urls.py
-  expire_views.py / expire_forms.py   (Expire Module)
-  migrations/0001 usdmast, 0002 default users, 0003 expire tables, 0004 dummy combo data
-  templates/postgresql/ (expire/ folder eke expire pages) | static/assesst/
+## Features
+
+- User login and logout flow
+- Admin-only user management (add, edit, delete, list)
+- Dashboard with summary statistics
+- Expire module with header/detail entry management
+- PostgreSQL-ready schema and seeded data
+
+## Project structure
+
+- `curd/` - Django project root
+  - `manage.py` - run Django commands
+  - `curd/settings.py` - main project configuration
+  - `postgresql/` - application logic, models, views, templates, forms
+
+## Requirements
+
+- Python 3.x
+- PostgreSQL server
+- Django
+- psycopg2-binary
+
+Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+## Database setup
+
+1. Create a PostgreSQL database named `django_test`.
+2. Update the database credentials in `curd/curd/settings.py` if your local PostgreSQL user/password differs.
+
+Example configuration:
+
+```python
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'django_test',
+        'USER': 'postgres',
+        'PASSWORD': 'mypass',
+        'HOST': 'localhost',
+        'PORT': '5432',
+    }
+}
+```
+
+## Run the project
+
+From the project root (`CURD Operation in PostgreSQL`):
+
+```bash
+cd curd
+python manage.py migrate
+python manage.py runserver
+```
+
+Then open:
+
+```text
+http://127.0.0.1:8000/
+```
+
+## Notes
+
+- The app uses `postgresql` as the Django app name.
+- Login and admin protection are handled in the app's decorators and authentication flow.
+- The default login flow is based on the `Usdmast` table.
+
+## Typical admin workflow
+
+1. Create a user from the Users screen.
+2. Log in with the user code and password.
+3. Access the dashboard and Expire module.
+4. Manage records through the app's forms.

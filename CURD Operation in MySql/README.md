@@ -1,0 +1,1 @@
+# curd  -  Django + MySQL (users CRUD + login + Expire module)

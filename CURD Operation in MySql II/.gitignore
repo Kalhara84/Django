@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Secrets - never upload these to git (use .env.example instead)
+.env
+*.pem
+
+# Local databases / uploads / build output
+*.db
+*.sqlite3
+node_modules/
+dist/
+staticfiles/
+
+# Editors / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

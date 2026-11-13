@@ -1,0 +1,5 @@
+{# _field.html - one header field: label (+ red *), the input, and the error text.  #}
+{# Included from form.html with:  f = a field of HeaderForm. Error text shows only when the field has is-invalid. #}
+<label class="form-label" for="{{ f.id_for_label }}">{{ f.label }}{% if f.field.required %} <span class="text-danger">*</span>{% endif %}</label>
+{{ f }}
+<div class="invalid-feedback">{% if f.errors %}{{ f.errors.0 }}{% else %}{{ f.label }} is required{% endif %}</div>
